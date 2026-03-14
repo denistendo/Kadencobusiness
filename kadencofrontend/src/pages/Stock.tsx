@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Package, Plus, Truck } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { toast } from "sonner";
 
 const CURRENCY = "UGX";
+const PRODUCTS = ["RED G.NUTS", "WHITE G.NUTS", "Other"];
 
 type Shipment = {
   id: string;
@@ -27,6 +29,7 @@ const Stock = () => {
 
   const [form, setForm] = useState({
     product: "",
+    customProduct: "",
     quantity: "",
     unitPrice: "",
     transportCost: "",
@@ -59,7 +62,8 @@ const Stock = () => {
   }, []);
 
   const handleAddShipment = async () => {
-    if (!form.product) return;
+    const productName = form.product === "Other" ? form.customProduct.trim() : form.product;
+    if (!productName) return;
 
     try {
       // Add shipment via API
@@ -77,10 +81,11 @@ const Stock = () => {
 
       const newShipment = {
         id: String(response?.shipment_id || Date.now()),
-        ...form,
+        product: productName,
         quantity: Number(form.quantity),
         unitPrice: Number(form.unitPrice),
         transportCost: Number(form.transportCost),
+        supplierName: form.supplierName,
         date: new Date().toLocaleDateString(),
       };
       
@@ -93,6 +98,7 @@ const Stock = () => {
 
     setForm({
       product: "",
+      customProduct: "",
       quantity: "",
       unitPrice: "",
       transportCost: "",
@@ -123,11 +129,32 @@ const Stock = () => {
             </DialogHeader>
 
             <div className="space-y-3">
-              <Input
-                placeholder="Product Name"
-                value={form.product}
-                onChange={(e) => setForm({ ...form, product: e.target.value })}
-              />
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Select
+                  value={form.product}
+                  onValueChange={(v) => setForm({ ...form, product: v, customProduct: "" })}
+                >
+                  <SelectTrigger className="w-full sm:w-[50%]">
+                    <SelectValue placeholder="Select Product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRODUCTS.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {form.product === "Other" && (
+                  <Input
+                    placeholder="Enter product name"
+                    value={form.customProduct}
+                    onChange={(e) => setForm({ ...form, customProduct: e.target.value })}
+                    className="w-full sm:w-[50%]"
+                  />
+                )}
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <Input

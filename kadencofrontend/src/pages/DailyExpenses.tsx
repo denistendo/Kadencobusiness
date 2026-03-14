@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Trash2, Plus, Wallet } from "lucide-react";
 import { fetchApi } from "@/lib/api";
+import { toast } from "sonner";
 
 type Expense = {
   id: string;
@@ -56,12 +57,17 @@ const Expenses = () => {
   const handleAddExpense = async () => {
     let category = form.category;
     if (category === "Other") {
-      if (!otherCategory) return alert("Please type the category for 'Other'");
+      if (!otherCategory) {
+        toast.error("Please type the category for 'Other'");
+        return;
+      }
       category = otherCategory;
     }
 
-    if (!category || !form.amount)
-      return alert("Please enter category and amount");
+    if (!category || !form.amount) {
+      toast.error("Please enter category and amount");
+      return;
+    }
 
     try {
       await fetchApi("/expenses/add/", {
@@ -76,9 +82,10 @@ const Expenses = () => {
       setForm({ category: "", description: "", amount: "" });
       setOtherCategory("");
       loadExpenses(); // Refresh list after adding
+      toast.success("Expense recorded successfully");
     } catch (error) {
       console.error("Failed to add expense:", error);
-      alert("Failed to record expense");
+      toast.error("Failed to record expense");
     }
   };
 

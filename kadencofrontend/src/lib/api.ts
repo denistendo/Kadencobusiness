@@ -3,14 +3,21 @@ export const API_BASE_URL = "http://127.0.0.1:8000/api";
 export const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  const headers = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...options.headers,
   };
+
+  const token = localStorage.getItem("token");
+  if (token) {
+    headers["Authorization"] = `Token ${token}`;
+  }
 
   const response = await fetch(url, {
     ...options,
-    headers,
+    headers: {
+      ...headers,
+      ...options.headers,
+    },
   });
 
   if (!response.ok) {

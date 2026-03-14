@@ -13,7 +13,17 @@ import Debts from "./pages/Debts";
 import MonthlyReports from "./pages/MonthlyReports";
 import NotFound from "./pages/NotFound";
 import DailySalesDetails from "./pages/DailySalesDetails";
+import Login from "./pages/Login";
+import { AuthProvider, useAuth } from "./components/AuthProvider";
+import { Navigate } from "react-router-dom";
+
 const queryClient = new QueryClient();
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { token } = useAuth();
+  if (!token) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -21,20 +31,32 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Layout>
+        <AuthProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/investors" element={<Investors />} />
-            <Route path="/stock" element={<Stock />} />
-            <Route path="/sales" element={<DailySales />} />
-            <Route path="/expenses" element={<DailyExpenses />} />
-            <Route path="/debts" element={<Debts />} />
-            <Route path="/reports" element={<MonthlyReports />} />
-            <Route path="*" element={<NotFound />} />
-            <Route path="/daily-sales-details" element={<DailySalesDetails sales={[]} />} />
-
+            <Route path="/login" element={<Login />} />
+            
+            <Route
+              path="*"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/investors" element={<Investors />} />
+                      <Route path="/stock" element={<Stock />} />
+                      <Route path="/sales" element={<DailySales />} />
+                      <Route path="/expenses" element={<DailyExpenses />} />
+                      <Route path="/debts" element={<Debts />} />
+                      <Route path="/reports" element={<MonthlyReports />} />
+                      <Route path="/daily-sales-details" element={<DailySalesDetails />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
           </Routes>
-        </Layout>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

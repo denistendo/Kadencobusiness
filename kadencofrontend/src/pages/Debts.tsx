@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 
 type Payment = { amount: number; date: string };
 type DebtorItem = { id: string; description: string; quantity: number; unit_price: number; labour?: number; total: number; date_taken: string; payments: Payment[] };
+const PRODUCTS = ["RED G.NUTS", "WHITE G.NUTS", "Other"];
 type Debtor = { id: string; name: string; phone: string; items: DebtorItem[] };
 
 const DebtorsPage = () => {
@@ -15,7 +17,7 @@ const DebtorsPage = () => {
   const [openAdd, setOpenAdd] = useState(false);
   const [openPayment, setOpenPayment] = useState(false);
   const [openDetails, setOpenDetails] = useState<Debtor | null>(null);
-  const [form, setForm] = useState({ name: "", phone: "", description: "", quantity: "", unitPrice: "", labour: "" });
+  const [form, setForm] = useState({ name: "", phone: "", product: "", customProduct: "", quantity: "", unitPrice: "", labour: "" });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDebtor, setSelectedDebtor] = useState<Debtor | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -38,8 +40,9 @@ const DebtorsPage = () => {
     const qty = parseFloat(form.quantity);
     const unit = parseFloat(form.unitPrice);
     const labour = parseFloat(form.labour || "0");
+    const productName = form.product === "Other" ? form.customProduct.trim() : form.product;
 
-    if (!form.name || !form.description || isNaN(qty) || isNaN(unit) || qty <= 0 || unit <= 0 || labour < 0) {
+    if (!form.name || !productName || isNaN(qty) || isNaN(unit) || qty <= 0 || unit <= 0 || labour < 0) {
       alert("Please fill all required fields with valid positive values (Quantity in KGs).");
       return;
     }
@@ -47,7 +50,9 @@ const DebtorsPage = () => {
     fetchApi("/debtors/add/", {
       method: "POST",
       body: JSON.stringify({
-        ...form,
+        name: form.name,
+        phone: form.phone,
+        description: productName,
         quantity: qty,
         unit_price: unit,
         labour: labour,
@@ -55,7 +60,7 @@ const DebtorsPage = () => {
     })
       .then(data => {
         if (data.debtor_id) {
-          setForm({ name: "", phone: "", description: "", quantity: "", unitPrice: "", labour: "" });
+          setForm({ name: "", phone: "", product: "", customProduct: "", quantity: "", unitPrice: "", labour: "" });
           setOpenAdd(false);
           fetchDebtors();
         } else alert("Error adding debt");
@@ -107,7 +112,20 @@ const DebtorsPage = () => {
               <div className="space-y-3 mt-2">
                 <Input placeholder="Customer Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
                 <Input placeholder="Phone Number" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-                <Input placeholder="Item Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+                
+                <div className="flex gap-2">
+                  <Select value={form.product} onValueChange={v => setForm({ ...form, product: v, customProduct: "" })}>
+                    <SelectTrigger className="w-1/2"><SelectValue placeholder="Select Product" /></SelectTrigger>
+                    <SelectContent>
+                      {PRODUCTS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+
+                  {form.product === "Other" && (
+                    <Input className="w-1/2" placeholder="Item Description" value={form.customProduct} onChange={e => setForm({ ...form, customProduct: e.target.value })} />
+                  )}
+                </div>
+
                 <Input placeholder="Quantity (KGs)" type="number" min={0} value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} />
                 <Input placeholder="Unit Price (UGX)" type="number" min={0} value={form.unitPrice} onChange={e => setForm({ ...form, unitPrice: e.target.value })} />
                 <Input placeholder="Labour Cost (optional, UGX)" type="number" min={0} value={form.labour} onChange={e => setForm({ ...form, labour: e.target.value })} />
