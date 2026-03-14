@@ -87,6 +87,7 @@ const DailySales = () => {
             product_name: productName,
             quantity: qty,
             selling_price: price,
+            total: qty * price,
           }),
         });
         

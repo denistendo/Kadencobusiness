@@ -37,15 +37,20 @@ const Investors = () => {
   const fetchInvestors = async () => {
     try {
       const data = await fetchApi("/investors/");
-      if (data && data.investors && data.investors.length > 0) {
-        setShareholders(data.investors);
+      const sourceArray = data.investors || data;
+      if (Array.isArray(sourceArray) && sourceArray.length > 0) {
+        setShareholders(sourceArray.map((sh: any) => ({
+          id: String(sh.id),
+          name: sh.name,
+          capitalContributed: Number(sh.capital_contributed || sh.capitalContributed) || 0,
+          withdrawals: Number(sh.withdrawals) || 0,
+          currentBalance: Number(sh.current_balance || sh.currentBalance) || 0,
+        })));
       } else {
-        // Backend returned empty or wasn't ready, use fallback for demo
         setShareholders(FALLBACK_INVESTORS);
       }
     } catch (err) {
       console.error("Error fetching investors:", err);
-      // Backend might not be ready, use fallback for demo
       setShareholders(FALLBACK_INVESTORS);
     }
   };
@@ -65,14 +70,12 @@ const Investors = () => {
     const amt = parseFloat(amount);
 
     try {
-      const data = await fetchApi("/investors/transaction/", {
+      await fetchApi("/investors/transaction/", {
         method: "POST",
-        body: JSON.stringify({ id: selectedInvestor, type: txType, amount: amt }),
+        body: JSON.stringify({ investor_id: selectedInvestor, type: txType, amount: amt }),
       });
       
-      if (data && data.investors) {
-        setShareholders(data.investors);
-      }
+      fetchInvestors();
       toast.success("Transaction saved successfully to backend!");
     } catch (err) {
       console.error(err);

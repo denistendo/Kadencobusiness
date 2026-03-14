@@ -37,14 +37,14 @@ const Stock = () => {
   const fetchShipments = async () => {
     try {
       const data = await fetchApi("/stock/");
-      const mappedStock = data.stock?.map((item: any) => ({
+      const mappedStock = data.shipments?.map((item: any) => ({
         id: String(item.id || Math.random()),
         product: item.product_name,
         quantity: item.quantity,
-        unitPrice: 0,
-        transportCost: 0,
+        unitPrice: Number(item.unit_price) || 0,
+        transportCost: Number(item.transport_cost) || 0,
         supplierName: "System",
-        date: new Date().toLocaleDateString(),
+        date: new Date(item.date).toLocaleDateString(),
       })) || [];
       
       setShipments(mappedStock);
@@ -66,11 +66,12 @@ const Stock = () => {
       const response = await fetchApi("/shipments/add/", {
         method: "POST",
         body: JSON.stringify({
-          product: form.product,
+          product_name: form.product,
           quantity: Number(form.quantity),
           unit_price: Number(form.unitPrice),
           transport_cost: Number(form.transportCost),
           supplier_name: form.supplierName,
+          status: "received" // Added status as it is required by the backend
         }),
       });
 

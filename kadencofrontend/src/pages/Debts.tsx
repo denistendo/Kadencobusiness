@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
+import { fetchApi } from "@/lib/api";
 
 type Payment = { amount: number; date: string };
 type DebtorItem = { id: string; description: string; quantity: number; unitPrice: number; labour?: number; total: number; dateTaken: string; payments: Payment[] };
@@ -20,11 +21,13 @@ const DebtorsPage = () => {
   const [paymentAmount, setPaymentAmount] = useState("");
 
   // --- Fetch debtors from API
-  const fetchDebtors = () => {
-    fetch("/api/debtors/")
-      .then(res => res.json())
-      .then(data => setDebtors(data.debtors))
-      .catch(err => console.error(err));
+  const fetchDebtors = async () => {
+    try {
+      const data = await fetchApi("/debtors/");
+      setDebtors(data.debtors || []);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => fetchDebtors(), []);
@@ -41,9 +44,8 @@ const DebtorsPage = () => {
       return;
     }
 
-    fetch("/api/debtors/add/", {
+    fetchApi("/debtors/add/", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
         quantity: qty,
@@ -51,14 +53,14 @@ const DebtorsPage = () => {
         labour: labour,
       }),
     })
-      .then(res => res.json())
       .then(data => {
         if (data.debtor_id) {
           setForm({ name: "", phone: "", description: "", quantity: "", unitPrice: "", labour: "" });
           setOpenAdd(false);
           fetchDebtors();
         } else alert("Error adding debt");
-      });
+      })
+      .catch(err => alert("Error adding debt: " + err));
   };
 
   // --- Record Payment ---
@@ -67,12 +69,10 @@ const DebtorsPage = () => {
     const amt = parseFloat(paymentAmount);
     if (amt <= 0 || isNaN(amt)) return alert("Enter a valid positive payment amount");
 
-    fetch("/api/debtors/record-payment/", {
+    fetchApi("/debtors/record-payment/", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ item_id: selectedDebtor.items[0]?.id, amount: amt }),
     })
-      .then(res => res.json())
       .then(data => {
         if (data.payment_id) {
           setPaymentAmount("");
@@ -80,7 +80,8 @@ const DebtorsPage = () => {
           setOpenPayment(false);
           fetchDebtors();
         } else alert("Error paying debt");
-      });
+      })
+      .catch(err => alert("Error paying debt: " + err));
   };
 
   const calculateRemaining = (debtor: Debtor) =>

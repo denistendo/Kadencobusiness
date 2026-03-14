@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.db.models import Sum
 from datetime import date
+from decimal import Decimal
 from .models import Investor, InvestorTransaction, Product, Shipment, DailySale, DailyExpense, Debtor, DebtorItem, DebtorPayment
 from .serializers import InvestorSerializer, ProductSerializer, ShipmentSerializer, DailySaleSerializer, DailyExpenseSerializer, DebtorSerializer
 
@@ -118,10 +119,10 @@ def add_investor_transaction(request):
         )
         
         # Update investor totals
-        if trans_type == 'injection':
-            investor.capital_contributed += float(amount)
+        if trans_type in ['injection', 'contribution']:
+            investor.capital_contributed += Decimal(str(amount))
         elif trans_type == 'withdrawal':
-            investor.withdrawals += float(amount)
+            investor.withdrawals += Decimal(str(amount))
         investor.save()
         
         return Response({'status': 'success'})
@@ -183,11 +184,11 @@ def get_sales(request):
 def add_sale(request):
     data = request.data
     try:
-        product = Product.objects.get(name=data['product_name'])
+        product, _ = Product.objects.get_or_create(
+            name=data['product_name'],
+            defaults={'unit_price': data['selling_price'], 'low_stock_threshold': 10}
+        )
         qty = float(data['quantity'])
-        
-        if product.current_stock < qty:
-            return Response({'error': 'Not enough stock'}, status=status.HTTP_400_BAD_REQUEST)
 
         sale = DailySale.objects.create(
             product=product,
