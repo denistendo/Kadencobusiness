@@ -125,8 +125,8 @@ const Index = () => {
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip />
-                <Bar dataKey="sales" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expenses" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="sales" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="expenses" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

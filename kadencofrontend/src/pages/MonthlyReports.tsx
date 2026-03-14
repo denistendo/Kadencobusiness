@@ -37,8 +37,20 @@ const MonthlyReports = () => {
     const loadReports = async () => {
       try {
         const data = await fetchApi("/monthly-reports/");
-        setSalesData(data.sales || []);
-        setExpensesData(data.expenses || []);
+        const mappedSales = (data.sales || []).map((s: any) => ({
+          ...s,
+          quantity: Number(s.quantity),
+          selling_price: Number(s.selling_price),
+          total: Number(s.total)
+        }));
+        
+        const mappedExpenses = (data.expenses || []).map((e: any) => ({
+          ...e,
+          amount: Number(e.amount)
+        }));
+
+        setSalesData(mappedSales);
+        setExpensesData(mappedExpenses);
         
         const mData = data.monthly_data || [];
         setMonthlyAggregatedData(mData);
@@ -213,6 +225,79 @@ const MonthlyReports = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* DETAILED DATA TABLES */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        {/* Sales Table */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-display">Sales Breakdown ({selectedMonth})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {salesThisMonth.length > 0 ? (
+              <div className="overflow-x-auto max-h-80">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-card">
+                    <tr className="border-b">
+                      <th className="text-left py-2 font-medium text-muted-foreground">Date</th>
+                      <th className="text-left py-2 font-medium text-muted-foreground">Product</th>
+                      <th className="text-right py-2 font-medium text-muted-foreground">Qty (kg)</th>
+                      <th className="text-right py-2 font-medium text-muted-foreground">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {salesThisMonth.map((s, i) => (
+                      <tr key={s.id || i} className="border-b border-border/50">
+                        <td className="py-2.5">{s.date}</td>
+                        <td className="py-2.5 font-medium">{s.product_name}</td>
+                        <td className="text-right py-2.5">{s.quantity}</td>
+                        <td className="text-right py-2.5 text-success">UGX {s.total.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-center text-sm text-muted-foreground py-4">No sales recorded this month.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Expenses Table */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-display">Expense Returns ({selectedMonth})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {expensesThisMonth.length > 0 ? (
+              <div className="overflow-x-auto max-h-80">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-card">
+                    <tr className="border-b">
+                      <th className="text-left py-2 font-medium text-muted-foreground">Date</th>
+                      <th className="text-left py-2 font-medium text-muted-foreground">Category</th>
+                      <th className="text-left py-2 font-medium text-muted-foreground">Description</th>
+                      <th className="text-right py-2 font-medium text-muted-foreground">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {expensesThisMonth.map((e, i) => (
+                      <tr key={e.id || i} className="border-b border-border/50">
+                        <td className="py-2.5 min-w-[90px]">{e.date}</td>
+                        <td className="py-2.5 whitespace-nowrap"><span className="bg-muted px-2 py-0.5 rounded text-xs">{e.category}</span></td>
+                        <td className="py-2.5 truncate max-w-[150px]" title={e.description}>{e.description || "-"}</td>
+                        <td className="text-right py-2.5 text-warning font-semibold">UGX {e.amount.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-center text-sm text-muted-foreground py-4">No expenses recorded this month.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

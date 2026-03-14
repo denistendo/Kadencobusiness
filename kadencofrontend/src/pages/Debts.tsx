@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 
 type Payment = { amount: number; date: string };
-type DebtorItem = { id: string; description: string; quantity: number; unitPrice: number; labour?: number; total: number; dateTaken: string; payments: Payment[] };
+type DebtorItem = { id: string; description: string; quantity: number; unit_price: number; labour?: number; total: number; date_taken: string; payments: Payment[] };
 type Debtor = { id: string; name: string; phone: string; items: DebtorItem[] };
 
 const DebtorsPage = () => {
@@ -153,19 +153,19 @@ const DebtorsPage = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Total Debt (UGX)</th>
-                  <th>Details</th>
+                  <th className="text-left font-medium py-2 text-muted-foreground">Name</th>
+                  <th className="text-left font-medium py-2 text-muted-foreground">Phone</th>
+                  <th className="text-right font-medium py-2 text-muted-foreground">Total Debt (UGX)</th>
+                  <th className="text-center font-medium py-2 text-muted-foreground">Details</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredDebtors.map(d => (
                   <tr key={d.id} className="border-b border-border/50">
-                    <td>{d.name}</td>
-                    <td>{d.phone}</td>
-                    <td className="font-semibold">UGX {calculateRemaining(d).toLocaleString()}</td>
-                    <td><Button variant="outline" size="sm" onClick={() => setOpenDetails(d)}>View Details</Button></td>
+                    <td className="py-2.5">{d.name}</td>
+                    <td className="py-2.5">{d.phone}</td>
+                    <td className="font-semibold text-right py-2.5">UGX {calculateRemaining(d).toLocaleString()}</td>
+                    <td className="text-center py-2.5"><Button variant="outline" size="sm" onClick={() => setOpenDetails(d)}>View Details</Button></td>
                   </tr>
                 ))}
               </tbody>
@@ -173,6 +173,55 @@ const DebtorsPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Details Dialog */}
+      <Dialog open={openDetails !== null} onOpenChange={(open) => !open && setOpenDetails(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Debt Details for {openDetails?.name}</DialogTitle>
+          </DialogHeader>
+          {openDetails && openDetails.items.length === 0 ? (
+            <p className="text-sm text-muted-foreground mt-4">No debt records found.</p>
+          ) : (
+            <div className="space-y-6 mt-4">
+              {openDetails?.items.map((item) => {
+                const itemTotal = Number(item.total);
+                const itemPaid = item.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+                const itemRemaining = itemTotal - itemPaid;
+                return (
+                  <div key={item.id} className="border rounded-lg p-4 space-y-3 bg-muted/20">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-semibold text-base">{item.description}</h4>
+                        <p className="text-xs text-muted-foreground">{item.date_taken} • Qty: {item.quantity} • Unit: UGX {Number(item.unit_price).toLocaleString()}{item.labour ? ` • Labour: UGX ${Number(item.labour).toLocaleString()}` : ""}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold">Total: UGX {itemTotal.toLocaleString()}</div>
+                        <div className={`text-xs font-bold ${itemRemaining === 0 ? 'text-success' : 'text-destructive'}`}>
+                          Remaining: UGX {itemRemaining.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    {item.payments.length > 0 && (
+                      <div className="bg-background rounded p-2 border text-sm mt-2">
+                        <p className="font-medium mb-1 text-xs text-muted-foreground uppercase tracking-wider">Payment History:</p>
+                        <div className="space-y-1">
+                          {item.payments.map((p, i) => (
+                            <div key={i} className="flex justify-between text-xs border-b last:border-0 pb-1 last:pb-0">
+                              <span>{p.date}</span>
+                              <span className="text-success font-medium">+UGX {Number(p.amount).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
