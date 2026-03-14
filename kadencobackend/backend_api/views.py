@@ -26,28 +26,21 @@ def dashboard_view(request):
     monthly_expenses = DailyExpense.objects.annotate(month=TruncMonth('date')).values('month').annotate(total_expenses=Sum('amount')).order_by('month')
     
     # Merge and format for the frontend chart structure
-    monthly_data_map = {}
+    months_order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    monthly_data_map = {m: {'month': m, 'sales': 0, 'expenses': 0} for m in months_order}
+
     for s in monthly_sales:
         m_str = s['month'].strftime('%b')  # e.g 'Jan', 'Feb'
-        if m_str not in monthly_data_map:
-            monthly_data_map[m_str] = {'month': m_str, 'sales': 0, 'expenses': 0}
-        monthly_data_map[m_str]['sales'] = s['total_sales']
+        if m_str in monthly_data_map:
+            monthly_data_map[m_str]['sales'] = s['total_sales']
 
     for e in monthly_expenses:
         m_str = e['month'].strftime('%b')
-        if m_str not in monthly_data_map:
-            monthly_data_map[m_str] = {'month': m_str, 'sales': 0, 'expenses': 0}
-        monthly_data_map[m_str]['expenses'] = e['total_expenses']
+        if m_str in monthly_data_map:
+            monthly_data_map[m_str]['expenses'] = e['total_expenses']
 
-    # Convert to list and ensure a minimal set of months exists if empty
+    # Convert to list
     monthly_data_list = list(monthly_data_map.values())
-    if not monthly_data_list:
-        monthly_data_list = [
-            {'month': 'Jan', 'sales': 0, 'expenses': 0},
-            {'month': 'Feb', 'sales': 0, 'expenses': 0},
-            {'month': 'Mar', 'sales': 0, 'expenses': 0},
-            {'month': 'Apr', 'sales': 0, 'expenses': 0},
-        ]
 
 
     return Response({
@@ -72,21 +65,20 @@ def get_monthly_reports(request):
     monthly_sales = DailySale.objects.annotate(month=TruncMonth('date')).values('month').annotate(total_sales=Sum('total')).order_by('month')
     monthly_expenses = DailyExpense.objects.annotate(month=TruncMonth('date')).values('month').annotate(total_expenses=Sum('amount')).order_by('month')
     
-    monthly_data_map = {}
+    months_order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    monthly_data_map = {m: {'month': m, 'sales': 0, 'expenses': 0} for m in months_order}
+    
     for s in monthly_sales:
         m_str = s['month'].strftime('%b')
-        if m_str not in monthly_data_map:
-            monthly_data_map[m_str] = {'month': m_str, 'sales': 0, 'expenses': 0}
-        monthly_data_map[m_str]['sales'] = s['total_sales']
+        if m_str in monthly_data_map:
+            monthly_data_map[m_str]['sales'] = s['total_sales']
+            
     for e in monthly_expenses:
         m_str = e['month'].strftime('%b')
-        if m_str not in monthly_data_map:
-            monthly_data_map[m_str] = {'month': m_str, 'sales': 0, 'expenses': 0}
-        monthly_data_map[m_str]['expenses'] = e['total_expenses']
+        if m_str in monthly_data_map:
+            monthly_data_map[m_str]['expenses'] = e['total_expenses']
 
     monthly_data_list = list(monthly_data_map.values())
-    if not monthly_data_list:
-        monthly_data_list = [{'month': 'Jan', 'sales': 0, 'expenses': 0}]
         
     return Response({
         'sales': DailySaleSerializer(sales, many=True).data,
