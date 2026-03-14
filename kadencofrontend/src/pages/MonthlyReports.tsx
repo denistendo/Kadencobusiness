@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchApi } from "@/lib/api";
@@ -68,7 +68,8 @@ const MonthlyReports = () => {
 
   // Parse ISO date "YYYY-MM-DD" and return month index (0-based)
   const getMonthFromDate = (dateStr: string) => {
-    const parts = dateStr.split("-");
+    if (!dateStr) return -1;
+    const parts = String(dateStr).split("-");
     if (parts.length !== 3) return -1;
     const month = parseInt(parts[1], 10);
     return isNaN(month) ? -1 : month - 1;
@@ -117,6 +118,26 @@ const MonthlyReports = () => {
     (sum, v) => sum + v,
     0,
   );
+
+  const groupedSales = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    salesThisMonth.forEach((s) => {
+      const date = s.date || "Unknown";
+      if (!groups[date]) groups[date] = [];
+      groups[date].push(s);
+    });
+    return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [salesThisMonth]);
+
+  const groupedExpenses = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    expensesThisMonth.forEach((e) => {
+      const cat = e.category || "Uncategorized";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(e);
+    });
+    return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [expensesThisMonth]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -228,73 +249,87 @@ const MonthlyReports = () => {
 
       {/* DETAILED DATA TABLES */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {/* Sales Table */}
+        {/* Sales Table Grouped by Day */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-display">Sales Breakdown ({selectedMonth})</CardTitle>
+            <CardTitle className="text-base font-display">Sales By Day ({selectedMonth})</CardTitle>
           </CardHeader>
           <CardContent>
-            {salesThisMonth.length > 0 ? (
-              <div className="overflow-x-auto max-h-80">
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-card">
-                    <tr className="border-b">
-                      <th className="text-left py-2 font-medium text-muted-foreground">Date</th>
-                      <th className="text-left py-2 font-medium text-muted-foreground">Product</th>
-                      <th className="text-right py-2 font-medium text-muted-foreground">Qty (kg)</th>
-                      <th className="text-right py-2 font-medium text-muted-foreground">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {salesThisMonth.map((s, i) => (
-                      <tr key={s.id || i} className="border-b border-border/50">
-                        <td className="py-2.5">{s.date}</td>
-                        <td className="py-2.5 font-medium">{s.product_name}</td>
-                        <td className="text-right py-2.5">{s.quantity}</td>
-                        <td className="text-right py-2.5 text-success">UGX {s.total.toLocaleString()}</td>
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-card z-10 shadow-sm">
+                  <tr className="border-b">
+                    <th className="text-left py-2 font-medium text-muted-foreground w-1/4">Date</th>
+                    <th className="text-left py-2 font-medium text-muted-foreground">Product</th>
+                    <th className="text-right py-2 font-medium text-muted-foreground">Qty (kg)</th>
+                    <th className="text-right py-2 font-medium text-muted-foreground">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groupedSales.length > 0 ? groupedSales.map(([date, dailySales]) => (
+                    <React.Fragment key={date}>
+                      <tr className="bg-muted/30 border-b">
+                        <td colSpan={4} className="py-2.5 px-3 font-semibold text-sm">
+                          {date} — Total: <span className="text-success font-bold">UGX {dailySales.reduce((sum, s) => sum + s.total, 0).toLocaleString()}</span>
+                        </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-center text-sm text-muted-foreground py-4">No sales recorded this month.</p>
-            )}
+                      {dailySales.map((s, i) => (
+                        <tr key={s.id || i} className="border-b border-border/20 last-of-type:border-b-0">
+                          <td className="py-2 pl-4 text-muted-foreground text-xs">└─</td>
+                          <td className="py-2 font-medium">{s.product_name}</td>
+                          <td className="text-right py-2">{s.quantity}</td>
+                          <td className="text-right py-2 text-success">UGX {s.total.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  )) : (
+                    <tr><td colSpan={4} className="text-center text-sm text-muted-foreground py-8">No sales recorded this month.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Expenses Table */}
+        {/* Expenses Table Categorized by Name */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-display">Expense Returns ({selectedMonth})</CardTitle>
+            <CardTitle className="text-base font-display">Expenses Categorized By Name ({selectedMonth})</CardTitle>
           </CardHeader>
           <CardContent>
-            {expensesThisMonth.length > 0 ? (
-              <div className="overflow-x-auto max-h-80">
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-card">
-                    <tr className="border-b">
-                      <th className="text-left py-2 font-medium text-muted-foreground">Date</th>
-                      <th className="text-left py-2 font-medium text-muted-foreground">Category</th>
-                      <th className="text-left py-2 font-medium text-muted-foreground">Description</th>
-                      <th className="text-right py-2 font-medium text-muted-foreground">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {expensesThisMonth.map((e, i) => (
-                      <tr key={e.id || i} className="border-b border-border/50">
-                        <td className="py-2.5 min-w-[90px]">{e.date}</td>
-                        <td className="py-2.5 whitespace-nowrap"><span className="bg-muted px-2 py-0.5 rounded text-xs">{e.category}</span></td>
-                        <td className="py-2.5 truncate max-w-[150px]" title={e.description}>{e.description || "-"}</td>
-                        <td className="text-right py-2.5 text-warning font-semibold">UGX {e.amount.toLocaleString()}</td>
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-card z-10 shadow-sm">
+                  <tr className="border-b">
+                    <th className="text-left py-2 font-medium text-muted-foreground w-1/4">Date</th>
+                    <th className="text-left py-2 font-medium text-muted-foreground">Category</th>
+                    <th className="text-left py-2 font-medium text-muted-foreground">Description</th>
+                    <th className="text-right py-2 font-medium text-muted-foreground">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groupedExpenses.length > 0 ? groupedExpenses.map(([category, catExpenses]) => (
+                    <React.Fragment key={category}>
+                      <tr className="bg-muted/30 border-b">
+                        <td colSpan={4} className="py-2.5 px-3 font-semibold text-sm">
+                          {category} — Total: <span className="text-warning font-bold">UGX {catExpenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}</span>
+                        </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-center text-sm text-muted-foreground py-4">No expenses recorded this month.</p>
-            )}
+                      {catExpenses.map((e, i) => (
+                        <tr key={e.id || i} className="border-b border-border/20 last-of-type:border-b-0">
+                          <td className="py-2 pl-4 text-muted-foreground text-xs">{e.date}</td>
+                          <td className="py-2 text-muted-foreground text-xs text-center">-</td>
+                          <td className="py-2 truncate max-w-[150px]" title={e.description}>{e.description || "-"}</td>
+                          <td className="text-right py-2 text-warning font-medium">UGX {e.amount.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  )) : (
+                    <tr><td colSpan={4} className="text-center text-sm text-muted-foreground py-8">No expenses recorded this month.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       </div>
