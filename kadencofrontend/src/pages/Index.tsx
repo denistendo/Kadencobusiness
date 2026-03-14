@@ -43,18 +43,22 @@ const Index = () => {
         const mappedTodaySales = (data.today_sales || []).map((s: any) => ({
             id: s.id,
             product: s.product_name,
-            quantity: s.quantity,
-            sellingPrice: s.selling_price,
-            total: s.total,
+            quantity: Number(s.quantity),
+            sellingPrice: Number(s.selling_price),
+            total: Number(s.total),
         }));
 
         setDashboardData({
           today_sales: mappedTodaySales,
           today_expenses: [],
-          total_sales_today: data.total_sales_today || 0,
-          total_expenses_today: data.total_expenses_today || 0,
-          cash_on_hand: (data.total_sales || 0) - (data.total_expenses || 0),
-          monthly_data: [],
+          total_sales_today: Number(data.total_sales_today) || 0,
+          total_expenses_today: Number(data.total_expenses_today) || 0,
+          cash_on_hand: (Number(data.total_sales) || 0) - (Number(data.total_expenses) || 0),
+          monthly_data: data.monthly_data?.map((m: any) => ({
+            month: m.month,
+            sales: Number(m.sales) || 0,
+            expenses: Number(m.expenses) || 0,
+          })) || [],
         });
       } catch (err) {
         console.error("Error fetching dashboard data:", err);

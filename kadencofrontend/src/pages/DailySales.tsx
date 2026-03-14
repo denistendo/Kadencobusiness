@@ -33,13 +33,13 @@ const DailySales = () => {
     const loadSales = async () => {
       try {
         const data = await fetchApi("/sales/");
-        if (data.sales) {
-          const mappedSales = data.sales.map((s: any) => ({
+        if (Array.isArray(data)) {
+          const mappedSales = data.map((s: any) => ({
             id: String(s.id),
             product: s.product_name,
-            quantity: s.quantity,
-            sellingPrice: s.selling_price,
-            total: s.total,
+            quantity: Number(s.quantity),
+            sellingPrice: Number(s.selling_price),
+            total: Number(s.total),
             date: new Date(s.date).toLocaleDateString("en-GB"),
           }));
           setSales(mappedSales);

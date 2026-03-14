@@ -30,7 +30,7 @@ const DebtorsPage = () => {
     }
   };
 
-  useEffect(() => fetchDebtors(), []);
+  useEffect(() => { fetchDebtors(); }, []);
 
   // --- Add debtor / debt ---
   const handleAddDebtor = () => {
@@ -85,7 +85,7 @@ const DebtorsPage = () => {
   };
 
   const calculateRemaining = (debtor: Debtor) =>
-    debtor.items.reduce((sum, item) => sum + (item.total - item.payments.reduce((pSum, p) => pSum + p.amount, 0)), 0);
+    debtor.items.reduce((sum, item) => sum + (Number(item.total) - item.payments.reduce((pSum, p) => pSum + Number(p.amount), 0)), 0);
 
   const filteredDebtors = debtors.filter(d =>
     d.name.toLowerCase().includes(searchQuery.toLowerCase()) || d.phone.includes(searchQuery)
