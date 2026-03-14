@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Trash2, Edit2, Save, X } from "lucide-react";
 import { fetchApi } from "@/lib/api";
+import { toast } from "sonner";
 
 type Payment = { amount: number; date: string };
 type DebtorItem = { id: string; description: string; quantity: number; unit_price: number; labour?: number; total: number; date_taken: string; payments: Payment[] };
@@ -21,6 +22,10 @@ const DebtorsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDebtor, setSelectedDebtor] = useState<Debtor | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
+  
+  // Edit State
+  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ quantity: "", unitPrice: "", labour: "" });
 
   // --- Fetch debtors from API
   const fetchDebtors = async () => {
@@ -87,6 +92,56 @@ const DebtorsPage = () => {
         } else alert("Error paying debt");
       })
       .catch(err => alert("Error paying debt: " + err));
+  };
+
+  // --- Edit & Delete Item ---
+  const handleDeleteItem = async (itemId: string) => {
+    if (!window.confirm("Are you sure you want to delete this debt item?")) return;
+    try {
+      const res = await fetchApi(`/debtors/item/${itemId}/delete/`, { method: "DELETE" });
+      if (res?.status === "success") {
+        toast.success("Debt item deleted successfully");
+        fetchDebtors();
+        setOpenDetails(null); 
+      }
+    } catch (err) {
+      toast.error("Error deleting item");
+    }
+  };
+
+  const handleSaveEdit = async (itemId: string) => {
+    const qty = parseFloat(editForm.quantity);
+    const unit = parseFloat(editForm.unitPrice);
+    const labour = parseFloat(editForm.labour || "0");
+    
+    if (isNaN(qty) || isNaN(unit) || qty <= 0 || unit <= 0 || labour < 0) {
+      toast.error("Valid positive numbers required for Quantity and Unit Price.");
+      return;
+    }
+
+    try {
+      const res = await fetchApi(`/debtors/item/${itemId}/edit/`, {
+        method: "PUT",
+        body: JSON.stringify({ quantity: qty, unit_price: unit, labour: labour })
+      });
+      if (res?.status === "success") {
+        toast.success("Debt item updated successfully");
+        setEditingItem(null);
+        fetchDebtors();
+        setOpenDetails(null);
+      }
+    } catch (err) {
+      toast.error("Error updating item");
+    }
+  };
+
+  const startEditing = (item: DebtorItem) => {
+    setEditingItem(item.id);
+    setEditForm({
+      quantity: item.quantity.toString(),
+      unitPrice: item.unit_price.toString(),
+      labour: item.labour ? item.labour.toString() : "0"
+    });
   };
 
   const calculateRemaining = (debtor: Debtor) =>
@@ -209,16 +264,40 @@ const DebtorsPage = () => {
                 return (
                   <div key={item.id} className="border rounded-lg p-4 space-y-3 bg-muted/20">
                     <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-semibold text-base">{item.description}</h4>
-                        <p className="text-xs text-muted-foreground">{item.date_taken} • Qty: {item.quantity} • Unit: UGX {Number(item.unit_price).toLocaleString()}{item.labour ? ` • Labour: UGX ${Number(item.labour).toLocaleString()}` : ""}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-semibold">Total: UGX {itemTotal.toLocaleString()}</div>
-                        <div className={`text-xs font-bold ${itemRemaining === 0 ? 'text-success' : 'text-destructive'}`}>
-                          Remaining: UGX {itemRemaining.toLocaleString()}
+                      {editingItem === item.id ? (
+                        <div className="flex-1 mr-4 space-y-2">
+                          <h4 className="font-semibold text-base">{item.description} (Editing)</h4>
+                          <div className="flex gap-2">
+                            <Input type="number" placeholder="Qty" value={editForm.quantity} onChange={e => setEditForm({...editForm, quantity: e.target.value})} className="h-8 text-xs" />
+                            <Input type="number" placeholder="Unit Price" value={editForm.unitPrice} onChange={e => setEditForm({...editForm, unitPrice: e.target.value})} className="h-8 text-xs" />
+                            <Input type="number" placeholder="Labour" value={editForm.labour} onChange={e => setEditForm({...editForm, labour: e.target.value})} className="h-8 text-xs" />
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <Button size="sm" onClick={() => handleSaveEdit(item.id)}><Save className="h-3 w-3 mr-1"/> Save</Button>
+                            <Button size="sm" variant="ghost" onClick={() => setEditingItem(null)}><X className="h-3 w-3 mr-1"/> Cancel</Button>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div>
+                          <h4 className="font-semibold text-base flex items-center gap-2">
+                            {item.description}
+                            <div className="flex gap-1 ml-2">
+                              <button onClick={() => startEditing(item)} className="text-muted-foreground hover:text-primary transition-colors"><Edit2 className="h-4 w-4" /></button>
+                              <button onClick={() => handleDeleteItem(item.id)} className="text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                          </h4>
+                          <p className="text-xs text-muted-foreground">{item.date_taken} • Qty: {item.quantity} • Unit: UGX {Number(item.unit_price).toLocaleString()}{item.labour ? ` • Labour: UGX ${Number(item.labour).toLocaleString()}` : ""}</p>
+                        </div>
+                      )}
+                      
+                      {editingItem !== item.id && (
+                        <div className="text-right">
+                          <div className="text-sm font-semibold">Total: UGX {itemTotal.toLocaleString()}</div>
+                          <div className={`text-xs font-bold ${itemRemaining === 0 ? 'text-success' : 'text-destructive'}`}>
+                            Remaining: UGX {itemRemaining.toLocaleString()}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     {item.payments.length > 0 && (
                       <div className="bg-background rounded p-2 border text-sm mt-2">

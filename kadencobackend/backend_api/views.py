@@ -264,3 +264,47 @@ def record_debtor_payment(request):
         return Response({'status': 'success', 'payment_id': payment.id})
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def delete_debtor_item(request, item_id):
+    try:
+        item = DebtorItem.objects.get(id=item_id)
+        debtor = item.debtor
+        item.delete()
+
+        # Check if the debtor has any items left. If not, delete the debtor entirely.
+        if debtor.items.count() == 0:
+            debtor.delete()
+
+        return Response({'status': 'success'})
+    except DebtorItem.DoesNotExist:
+        return Response({'error': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def edit_debtor_item(request, item_id):
+    data = request.data
+    try:
+        item = DebtorItem.objects.get(id=item_id)
+        
+        # We only allow editing the specific item quantities/prices
+        # If the user needs to actually move an item to another person, they should delete and recreate.
+        if 'description' in data:
+            item.description = data['description']
+            
+        qty = float(data.get('quantity', item.quantity))
+        u_price = float(data.get('unit_price', item.unit_price))
+        labour = float(data.get('labour', item.labour))
+        
+        item.quantity = qty
+        item.unit_price = u_price
+        item.labour = labour
+        item.total = (qty * u_price) + labour
+        
+        item.save()
+        return Response({'status': 'success', 'item_id': item.id})
+    except DebtorItem.DoesNotExist:
+        return Response({'error': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

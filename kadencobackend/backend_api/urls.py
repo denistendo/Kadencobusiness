@@ -21,4 +21,6 @@ urlpatterns = [
     path('debtors/', views.get_debtors, name='debtors-list'),
     path('debtors/add/', views.add_debtor_item, name='add-debtor-item'),
     path('debtors/record-payment/', views.record_debtor_payment, name='record-debtor-payment'),
+    path('debtors/item/<int:item_id>/delete/', views.delete_debtor_item, name='delete-debtor-item'),
+    path('debtors/item/<int:item_id>/edit/', views.edit_debtor_item, name='edit-debtor-item'),
 ]
