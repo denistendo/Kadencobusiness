@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2, Plus, Wallet } from "lucide-react";
-import { dailyExpenses as mockExpenses } from "@/lib/data";
+import { fetchApi } from "@/lib/api";
 
 type Expense = {
   id: string;
@@ -25,7 +25,7 @@ const CURRENCY = "UGX";
 const categories = ["Labour", "Derrick", "Chris", "Mzee Boss", "Home", "Other"];
 
 const Expenses = () => {
-  const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [form, setForm] = useState({
     category: "",
     description: "",
@@ -35,12 +35,25 @@ const Expenses = () => {
 
   // Total expenses
   const totalExpenses = useMemo(
-    () => expenses.reduce((sum, e) => sum + e.amount, 0),
+    () => expenses.reduce((sum, e) => sum + Number(e.amount), 0),
     [expenses],
   );
 
+  const loadExpenses = async () => {
+    try {
+      const data = await fetchApi("/expenses/");
+      setExpenses(data);
+    } catch (error) {
+      console.error("Failed to load expenses:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadExpenses();
+  }, []);
+
   // Add new expense
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     let category = form.category;
     if (category === "Other") {
       if (!otherCategory) return alert("Please type the category for 'Other'");
@@ -50,17 +63,23 @@ const Expenses = () => {
     if (!category || !form.amount)
       return alert("Please enter category and amount");
 
-    const newExpense: Expense = {
-      id: Date.now().toString(),
-      category,
-      description: form.description || undefined,
-      amount: parseFloat(form.amount),
-      date: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
-    };
+    try {
+      await fetchApi("/expenses/add/", {
+        method: "POST",
+        body: JSON.stringify({
+          category,
+          description: form.description || undefined,
+          amount: parseFloat(form.amount),
+        }),
+      });
 
-    setExpenses((prev) => [newExpense, ...prev]);
-    setForm({ category: "", description: "", amount: "" });
-    setOtherCategory("");
+      setForm({ category: "", description: "", amount: "" });
+      setOtherCategory("");
+      loadExpenses(); // Refresh list after adding
+    } catch (error) {
+      console.error("Failed to add expense:", error);
+      alert("Failed to record expense");
+    }
   };
 
   // Delete expense
@@ -182,7 +201,7 @@ const Expenses = () => {
                       <td className="py-2 px-3">{e.category}</td>
                       <td className="py-2 px-3">{e.description || "-"}</td>
                       <td className="text-right py-2 px-3 font-semibold">
-                        {CURRENCY} {e.amount.toLocaleString()}
+                        {CURRENCY} {Number(e.amount).toLocaleString()}
                       </td>
                       <td className="py-2 px-3">{e.date}</td>
                       <td className="text-center py-2 px-3">

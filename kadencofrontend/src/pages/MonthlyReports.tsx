@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { dailySales, dailyExpenses, monthlyData } from "@/lib/data";
+import { fetchApi } from "@/lib/api";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 const COLORS = [
@@ -28,9 +28,31 @@ const MONTHS = [
 ];
 
 const MonthlyReports = () => {
-  const [selectedMonth, setSelectedMonth] = useState(
-    monthlyData[monthlyData.length - 1].month,
-  );
+  const [salesData, setSalesData] = useState<any[]>([]);
+  const [expensesData, setExpensesData] = useState<any[]>([]);
+  const [monthlyAggregatedData, setMonthlyAggregatedData] = useState<{month: string, sales: number, expenses: number}[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState("");
+
+  useEffect(() => {
+    const loadReports = async () => {
+      try {
+        const data = await fetchApi("/monthly-reports/");
+        setSalesData(data.sales || []);
+        setExpensesData(data.expenses || []);
+        
+        const mData = data.monthly_data || [];
+        setMonthlyAggregatedData(mData);
+        if (mData.length > 0) {
+            setSelectedMonth(mData[mData.length - 1].month);
+        } else {
+            setSelectedMonth(MONTHS[new Date().getMonth()]);
+        }
+      } catch (err) {
+        console.error("Failed to load monthly reports:", err);
+      }
+    };
+    loadReports();
+  }, []);
 
   // Parse ISO date "YYYY-MM-DD" and return month index (0-based)
   const getMonthFromDate = (dateStr: string) => {
@@ -44,16 +66,16 @@ const MonthlyReports = () => {
 
   const salesThisMonth = useMemo(
     () =>
-      dailySales.filter((s) => getMonthFromDate(s.date) === selectedMonthIndex),
-    [selectedMonthIndex],
+      salesData.filter((s) => getMonthFromDate(s.date) === selectedMonthIndex),
+    [selectedMonthIndex, salesData],
   );
 
   const expensesThisMonth = useMemo(
     () =>
-      dailyExpenses.filter(
+      expensesData.filter(
         (e) => getMonthFromDate(e.date) === selectedMonthIndex,
       ),
-    [selectedMonthIndex],
+    [selectedMonthIndex, expensesData],
   );
 
   const totalSales = useMemo(
@@ -102,7 +124,7 @@ const MonthlyReports = () => {
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
         >
-          {monthlyData.map((m) => (
+          {monthlyAggregatedData.map((m) => (
             <option key={m.month} value={m.month}>
               {m.month}
             </option>
