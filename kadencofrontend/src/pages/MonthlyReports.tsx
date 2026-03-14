@@ -54,11 +54,7 @@ const MonthlyReports = () => {
         
         const mData = data.monthly_data || [];
         setMonthlyAggregatedData(mData);
-        if (mData.length > 0) {
-            setSelectedMonth(mData[mData.length - 1].month);
-        } else {
-            setSelectedMonth(MONTHS[new Date().getMonth()]);
-        }
+        setSelectedMonth(MONTHS[new Date().getMonth()]);
       } catch (err) {
         console.error("Failed to load monthly reports:", err);
       }

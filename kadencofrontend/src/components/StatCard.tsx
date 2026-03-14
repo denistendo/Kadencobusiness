@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 interface StatCardProps {
   title: string;
   value: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
   trend?: string;
   trendUp?: boolean;
   variant?: "default" | "success" | "warning" | "info";
@@ -38,9 +38,11 @@ export function StatCard({ title, value, icon: Icon, trend, trendUp, variant = "
               </p>
             )}
           </div>
-          <div className={`p-3 rounded-lg ${iconStyles[variant]}`}>
-            <Icon className="h-5 w-5" />
-          </div>
+          {Icon && (
+            <div className={`p-3 rounded-lg ${iconStyles[variant]}`}>
+              <Icon className="h-5 w-5" />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
