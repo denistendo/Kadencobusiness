@@ -43,8 +43,8 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
       <Card className="w-full max-w-md mx-auto animate-fade-in shadow-lg border-primary/10">
         <CardHeader className="text-center pb-2">
-          <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-            <span className="text-2xl font-bold text-primary">K</span>
+          <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center shadow-sm rounded-full bg-white/50 overflow-hidden">
+            <img src="/favicon.png" alt="Kadenco Logo" className="w-12 h-12 object-contain" />
           </div>
           <CardTitle className="text-2xl font-display font-bold">Kadenco Investments</CardTitle>
           <p className="text-muted-foreground text-sm mt-2">Sign in to your account</p>
