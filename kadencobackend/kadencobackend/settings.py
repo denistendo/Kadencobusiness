@@ -1,8 +1,9 @@
-# settings.py — Final version for Neon PostgreSQL (pooled) + Render free tier
-
 import os
 from pathlib import Path
 import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv()  # MUST be here — before any os.getenv() calls
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
