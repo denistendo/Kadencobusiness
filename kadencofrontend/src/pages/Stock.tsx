@@ -46,11 +46,17 @@ const Stock = () => {
         quantity: item.quantity,
         unitPrice: Number(item.unit_price) || 0,
         transportCost: Number(item.transport_cost) || 0,
-        supplierName: "System",
-        date: new Date(item.date).toLocaleDateString(),
+        supplierName: item.supplier_name || "System",
+        date: new Date(item.date).toLocaleDateString("en-GB"),
       })) || [];
+      // Sort shipments by ID descending (newest first)
+      mappedStock.sort((a, b) => Number(b.id) - Number(a.id));
       
       setShipments(mappedStock);
+      
+      if (mappedStock.length > 0) {
+        setRecentSupplier(mappedStock[0].supplierName);
+      }
     } catch (err) {
       console.error("Error fetching stock:", err);
       toast.error("Failed to fetch stock from backend.");
@@ -86,7 +92,7 @@ const Stock = () => {
         unitPrice: Number(form.unitPrice),
         transportCost: Number(form.transportCost),
         supplierName: form.supplierName,
-        date: new Date().toLocaleDateString(),
+        date: new Date().toLocaleDateString("en-GB"),
       };
       
       setShipments([newShipment, ...shipments]);
