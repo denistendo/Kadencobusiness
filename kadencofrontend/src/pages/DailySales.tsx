@@ -122,8 +122,8 @@ const DailySales = () => {
     setForm({
       product: PRODUCTS.includes(sale.product) ? sale.product : "Other",
       customProduct: PRODUCTS.includes(sale.product) ? "" : sale.product,
-      quantity: String(sale.quantity),
-      sellingPrice: String(sale.sellingPrice),
+      quantity: String(Number(sale.quantity)),
+      sellingPrice: String(Number(sale.sellingPrice)),
     });
     setEditingId(sale.id);
   };
@@ -140,9 +140,9 @@ const DailySales = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard title="Today's Total Sales" value={`UGX ${totalToday.toLocaleString()}`} icon={ShoppingCart} variant="success" />
-        <StatCard title="Items Sold Today (kg)" value={todaySales.reduce((sum, s) => sum + s.quantity, 0).toLocaleString()} icon={ShoppingCart} variant="info" />
-        <StatCard title="Month-to-Date Total" value={`UGX ${monthlyTotal.toLocaleString()}`} icon={ShoppingCart} variant="warning" />
+        <StatCard title="Today's Total Sales" value={`UGX ${totalToday.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} icon={ShoppingCart} variant="success" />
+        <StatCard title="Number of Sales Today" value={todaySales.length.toString()} icon={ShoppingCart} variant="info" />
+        <StatCard title="Month-to-Date Total" value={`UGX ${monthlyTotal.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} icon={ShoppingCart} variant="warning" />
       </div>
 
       {/* Add / Edit Sale Form */}
@@ -225,8 +225,8 @@ const DailySales = () => {
                     <tr key={sale.id} className="border-b border-border/50">
                       <td className="py-2.5 font-medium">{sale.product}</td>
                       <td className="text-right py-2.5">{sale.quantity}</td>
-                      <td className="text-right py-2.5">{sale.sellingPrice.toLocaleString()}</td>
-                      <td className="text-right py-2.5 font-semibold">{sale.total.toLocaleString()}</td>
+                      <td className="text-right py-2.5">{sale.sellingPrice.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
+                      <td className="text-right py-2.5 font-semibold">{sale.total.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                       <td className="text-center py-2.5 flex justify-center gap-2">
                         <Button size="sm" variant="outline" onClick={() => handleEdit(sale)}>
                           <Edit className="h-4 w-4" />
@@ -241,7 +241,7 @@ const DailySales = () => {
                 <tfoot>
                   <tr>
                     <td colSpan={3} className="py-3 font-bold">Total</td>
-                    <td className="text-right py-3 font-bold text-success text-base">{totalToday.toLocaleString()}</td>
+                    <td className="text-right py-3 font-bold text-success text-base">{totalToday.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                     <td></td>
                   </tr>
                 </tfoot>

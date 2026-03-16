@@ -128,7 +128,7 @@ const DailyExpensesDetails = () => {
                     >
                       <td className="py-2.5">{day}</td>
                       <td className={`text-right py-2.5 ${hasExpenses ? 'font-semibold' : 'text-muted-foreground'}`}>
-                        {dailyTotals[day].toLocaleString()}
+                        {dailyTotals[day].toLocaleString("en-US", { maximumFractionDigits: 0 })}
                       </td>
                     </tr>
                   );
@@ -136,7 +136,7 @@ const DailyExpensesDetails = () => {
                 {/* Monthly total */}
                 <tr className="border-t font-bold text-success">
                   <td className="py-2.5">Monthly Total</td>
-                  <td className="text-right py-2.5">{monthlyTotal.toLocaleString()}</td>
+                  <td className="text-right py-2.5">{monthlyTotal.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                 </tr>
               </tbody>
             </table>
@@ -168,7 +168,7 @@ const DailyExpensesDetails = () => {
                       <tr key={exp.id} className="border-b border-border/50">
                         <td className="py-2.5 font-medium">{exp.category}</td>
                         <td className="py-2.5">{exp.description}</td>
-                        <td className="text-right py-2.5">{exp.amount.toLocaleString()}</td>
+                        <td className="text-right py-2.5">{exp.amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -176,7 +176,7 @@ const DailyExpensesDetails = () => {
                     <tr>
                       <td colSpan={2} className="py-3 font-bold">Day Total</td>
                       <td className="text-right py-3 font-bold text-success text-base">
-                        {specificDayExpenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}
+                        {specificDayExpenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}
                       </td>
                     </tr>
                   </tfoot>

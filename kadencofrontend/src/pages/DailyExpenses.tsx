@@ -10,7 +10,7 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Plus, Wallet } from "lucide-react";
+import { Trash2, Plus, Wallet, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { fetchApi } from "@/lib/api";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ const Expenses = () => {
     amount: "",
   });
   const [otherCategory, setOtherCategory] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const today = new Date().toLocaleDateString("en-GB");
@@ -64,8 +65,8 @@ const Expenses = () => {
     loadExpenses();
   }, []);
 
-  // Add new expense
-  const handleAddExpense = async () => {
+  // Add or Edit expense
+  const handleAddOrEditExpense = async () => {
     let category = form.category;
     if (category === "Other") {
       if (!otherCategory) {
@@ -81,28 +82,61 @@ const Expenses = () => {
     }
 
     try {
-      await fetchApi("/expenses/add/", {
-        method: "POST",
-        body: JSON.stringify({
-          category,
-          description: form.description || undefined,
-          amount: parseFloat(form.amount),
-        }),
-      });
+      if (editingId) {
+        await fetchApi(`/expenses/${editingId}/edit/`, {
+          method: "PUT",
+          body: JSON.stringify({
+            category,
+            description: form.description || undefined,
+            amount: parseFloat(form.amount),
+          }),
+        });
+        toast.success("Expense updated successfully");
+        setEditingId(null);
+      } else {
+        await fetchApi("/expenses/add/", {
+          method: "POST",
+          body: JSON.stringify({
+            category,
+            description: form.description || undefined,
+            amount: parseFloat(form.amount),
+          }),
+        });
+        toast.success("Expense recorded successfully");
+      }
 
       setForm({ category: "", description: "", amount: "" });
       setOtherCategory("");
-      loadExpenses(); // Refresh list after adding
-      toast.success("Expense recorded successfully");
+      loadExpenses(); // Refresh list after adding/editing
     } catch (error) {
-      console.error("Failed to add expense:", error);
-      toast.error("Failed to record expense");
+      console.error("Failed to save expense:", error);
+      toast.error("Failed to save expense");
     }
   };
 
   // Delete expense
-  const handleDelete = (id: string) =>
-    setExpenses((prev) => prev.filter((e) => e.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this expense?")) return;
+    try {
+      await fetchApi(`/expenses/${id}/delete/`, { method: "DELETE" });
+      setExpenses((prev) => prev.filter((e) => e.id !== id));
+      toast.success("Expense deleted");
+    } catch (err) {
+      toast.error("Failed to delete expense");
+    }
+  };
+
+  // Edit expense
+  const handleEdit = (expense: Expense) => {
+    const isStandardCategory = categories.includes(expense.category);
+    setForm({
+      category: isStandardCategory ? expense.category : "Other",
+      description: expense.description || "",
+      amount: String(Number(expense.amount)),
+    });
+    setOtherCategory(isStandardCategory ? "" : expense.category);
+    setEditingId(expense.id);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in p-4">
@@ -112,7 +146,7 @@ const Expenses = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           title="Today's Total Expenses"
-          value={`${CURRENCY} ${totalToday.toLocaleString()}`}
+          value={`${CURRENCY} ${totalToday.toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
           icon={Wallet}
           variant="warning"
         />
@@ -124,16 +158,16 @@ const Expenses = () => {
         />
         <StatCard
           title="Month-to-Date Total"
-          value={`${CURRENCY} ${monthlyTotal.toLocaleString()}`}
+          value={`${CURRENCY} ${monthlyTotal.toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
           icon={Wallet}
           variant="default"
         />
       </div>
 
-      {/* Record New Expense */}
+      {/* Record / Edit Expense */}
       <Card>
         <CardHeader>
-          <CardTitle>Record New Expense</CardTitle>
+          <CardTitle>{editingId ? "Edit Expense" : "Record New Expense"}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-3 items-center">
           {/* Category */}
@@ -181,10 +215,10 @@ const Expenses = () => {
           />
 
           <Button
-            onClick={handleAddExpense}
+            onClick={handleAddOrEditExpense}
             className="flex items-center gap-2"
           >
-            <Plus className="h-4 w-4" /> Add
+            <Plus className="h-4 w-4" /> {editingId ? "Update" : "Add"}
           </Button>
         </CardContent>
       </Card>
@@ -222,9 +256,16 @@ const Expenses = () => {
                       <td className="py-2 px-3">{e.category}</td>
                       <td className="py-2 px-3">{e.description || "-"}</td>
                       <td className="text-right py-2 px-3 font-semibold">
-                        {CURRENCY} {Number(e.amount).toLocaleString()}
+                        {CURRENCY} {Number(e.amount).toLocaleString("en-US", { maximumFractionDigits: 0 })}
                       </td>
-                      <td className="text-center py-2 px-3">
+                      <td className="text-center py-2 px-3 flex justify-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(e)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="destructive"
@@ -242,7 +283,7 @@ const Expenses = () => {
                       Total
                     </td>
                     <td className="text-right py-2 px-3 font-bold text-success text-base">
-                      {CURRENCY} {totalToday.toLocaleString()}
+                      {CURRENCY} {totalToday.toLocaleString("en-US", { maximumFractionDigits: 0 })}
                     </td>
                     <td></td>
                   </tr>

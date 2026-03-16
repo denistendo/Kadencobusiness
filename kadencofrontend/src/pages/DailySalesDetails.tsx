@@ -131,7 +131,7 @@ const DailySalesDetails = () => {
                     >
                       <td className="py-2.5">{day}</td>
                       <td className={`text-right py-2.5 ${hasSales ? 'font-semibold' : 'text-muted-foreground'}`}>
-                        {dailyTotals[day].toLocaleString()}
+                        {dailyTotals[day].toLocaleString("en-US", { maximumFractionDigits: 0 })}
                       </td>
                     </tr>
                   );
@@ -139,7 +139,7 @@ const DailySalesDetails = () => {
                 {/* Monthly total */}
                 <tr className="border-t font-bold text-success">
                   <td className="py-2.5">Monthly Total</td>
-                  <td className="text-right py-2.5">{monthlyTotal.toLocaleString()}</td>
+                  <td className="text-right py-2.5">{monthlyTotal.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                 </tr>
               </tbody>
             </table>
@@ -172,8 +172,8 @@ const DailySalesDetails = () => {
                       <tr key={sale.id} className="border-b border-border/50">
                         <td className="py-2.5 font-medium">{sale.product}</td>
                         <td className="text-right py-2.5">{sale.quantity}</td>
-                        <td className="text-right py-2.5">{sale.sellingPrice.toLocaleString()}</td>
-                        <td className="text-right py-2.5">{sale.total.toLocaleString()}</td>
+                        <td className="text-right py-2.5">{sale.sellingPrice.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
+                        <td className="text-right py-2.5">{sale.total.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -181,7 +181,7 @@ const DailySalesDetails = () => {
                     <tr>
                       <td colSpan={3} className="py-3 font-bold">Day Total</td>
                       <td className="text-right py-3 font-bold text-success text-base">
-                        {specificDaySales.reduce((sum, s) => sum + s.total, 0).toLocaleString()}
+                        {specificDaySales.reduce((sum, s) => sum + s.total, 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}
                       </td>
                     </tr>
                   </tfoot>

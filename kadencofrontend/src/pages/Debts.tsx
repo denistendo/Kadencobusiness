@@ -138,9 +138,9 @@ const DebtorsPage = () => {
   const startEditing = (item: DebtorItem) => {
     setEditingItem(item.id);
     setEditForm({
-      quantity: item.quantity.toString(),
-      unitPrice: item.unit_price.toString(),
-      labour: item.labour ? item.labour.toString() : "0"
+      quantity: Number(item.quantity).toString(),
+      unitPrice: Number(item.unit_price).toString(),
+      labour: item.labour ? Number(item.labour).toString() : "0"
     });
   };
 

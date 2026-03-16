@@ -197,6 +197,57 @@ def add_sale(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['PUT'])
+def edit_sale(request, sale_id):
+    data = request.data
+    try:
+        sale = DailySale.objects.get(id=sale_id)
+        
+        # Revert old stock impact
+        old_product = sale.product
+        old_product.current_stock += sale.quantity
+        old_product.save()
+
+        # Update product if it changed
+        product, _ = Product.objects.get_or_create(
+            name=data.get('product_name', old_product.name),
+            defaults={'unit_price': data.get('selling_price', sale.selling_price), 'low_stock_threshold': 10}
+        )
+        
+        qty = float(data.get('quantity', sale.quantity))
+        
+        sale.product = product
+        sale.quantity = qty
+        sale.selling_price = data.get('selling_price', sale.selling_price)
+        sale.total = data.get('total', sale.total)
+        sale.save()
+        
+        # Apply new stock impact
+        product.current_stock -= qty
+        product.save()
+        
+        return Response({'status': 'success'})
+    except DailySale.DoesNotExist:
+        return Response({'error': 'Sale not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def delete_sale(request, sale_id):
+    try:
+        sale = DailySale.objects.get(id=sale_id)
+        
+        product = sale.product
+        product.current_stock += sale.quantity
+        product.save()
+        
+        sale.delete()
+        return Response({'status': 'success'})
+    except DailySale.DoesNotExist:
+        return Response({'error': 'Sale not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET'])
 def get_expenses(request):
     expenses = DailyExpense.objects.all().order_by('-date')[:50]
@@ -213,6 +264,37 @@ def add_expense(request):
             date=data.get('date', date.today())
         )
         return Response({'status': 'success', 'expense_id': expense.id})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def edit_expense(request, expense_id):
+    data = request.data
+    try:
+        expense = DailyExpense.objects.get(id=expense_id)
+        
+        if 'category' in data:
+            expense.category = data['category']
+        if 'description' in data:
+            expense.description = data['description']
+        if 'amount' in data:
+            expense.amount = data['amount']
+        
+        expense.save()
+        return Response({'status': 'success'})
+    except DailyExpense.DoesNotExist:
+        return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def delete_expense(request, expense_id):
+    try:
+        expense = DailyExpense.objects.get(id=expense_id)
+        expense.delete()
+        return Response({'status': 'success'})
+    except DailyExpense.DoesNotExist:
+        return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -307,5 +389,4 @@ def edit_debtor_item(request, item_id):
     except DebtorItem.DoesNotExist:
         return Response({'error': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
