@@ -70,7 +70,7 @@ const Stock = () => {
       const response = await fetchApi("/shipments/add/", {
         method: "POST",
         body: JSON.stringify({
-          product_name: form.product,
+          product_name: productName,
           quantity: Number(form.quantity),
           unit_price: Number(form.unitPrice),
           transport_cost: Number(form.transportCost),

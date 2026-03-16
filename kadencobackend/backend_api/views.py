@@ -155,6 +155,7 @@ def add_shipment(request):
             transport_cost=t_cost,
             estimated_sales=est_sales,
             estimated_profit=est_profit,
+            supplier_name=data.get('supplier_name', 'System'),
             date=date.today(),
             status=data['status']
         )
