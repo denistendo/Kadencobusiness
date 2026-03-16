@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2, Plus, Wallet } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { fetchApi } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -34,16 +35,26 @@ const Expenses = () => {
   });
   const [otherCategory, setOtherCategory] = useState("");
 
-  // Total expenses
-  const totalExpenses = useMemo(
-    () => expenses.reduce((sum, e) => sum + Number(e.amount), 0),
-    [expenses],
-  );
+  const navigate = useNavigate();
+  const today = new Date().toLocaleDateString("en-GB");
+
+  // Today's expenses
+  const todayExpenses = useMemo(() => expenses.filter(e => e.date === today), [expenses, today]);
+  const totalToday = useMemo(() => todayExpenses.reduce((sum, e) => sum + Number(e.amount), 0), [todayExpenses]);
+
+  // Month-to-date total
+  const monthlyTotal = useMemo(() => expenses.reduce((sum, e) => sum + Number(e.amount), 0), [expenses]);
 
   const loadExpenses = async () => {
     try {
       const data = await fetchApi("/expenses/");
-      setExpenses(data);
+      if (Array.isArray(data)) {
+        const mappedExpenses = data.map((e: any) => ({
+          ...e,
+          date: new Date(e.date).toLocaleDateString("en-GB")
+        }));
+        setExpenses(mappedExpenses);
+      }
     } catch (error) {
       console.error("Failed to load expenses:", error);
     }
@@ -98,18 +109,24 @@ const Expenses = () => {
       <h1 className="text-2xl font-display font-bold">Expenses</h1>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
-          title="Total Expenses"
-          value={`${CURRENCY} ${totalExpenses.toLocaleString()}`}
+          title="Today's Total Expenses"
+          value={`${CURRENCY} ${totalToday.toLocaleString()}`}
           icon={Wallet}
           variant="warning"
         />
         <StatCard
-          title="Number of Expenses"
-          value={String(expenses.length)}
+          title="Number of Expenses Today"
+          value={String(todayExpenses.length)}
           icon={Wallet}
           variant="info"
+        />
+        <StatCard
+          title="Month-to-Date Total"
+          value={`${CURRENCY} ${monthlyTotal.toLocaleString()}`}
+          icon={Wallet}
+          variant="default"
         />
       </div>
 
@@ -175,11 +192,11 @@ const Expenses = () => {
       {/* Expenses Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Expenses</CardTitle>
+          <CardTitle>Today's Expenses ({today})</CardTitle>
         </CardHeader>
         <CardContent>
-          {expenses.length === 0 ? (
-            <p className="text-muted-foreground">No expenses recorded yet.</p>
+          {todayExpenses.length === 0 ? (
+            <p className="text-muted-foreground">No expenses recorded for today.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -194,23 +211,19 @@ const Expenses = () => {
                     <th className="text-right py-2 px-3 font-medium text-muted-foreground">
                       Amount (UGX)
                     </th>
-                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">
-                      Date
-                    </th>
                     <th className="text-center py-2 px-3 font-medium text-muted-foreground">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {expenses.map((e) => (
+                  {todayExpenses.map((e) => (
                     <tr key={e.id} className="border-b">
                       <td className="py-2 px-3">{e.category}</td>
                       <td className="py-2 px-3">{e.description || "-"}</td>
                       <td className="text-right py-2 px-3 font-semibold">
                         {CURRENCY} {Number(e.amount).toLocaleString()}
                       </td>
-                      <td className="py-2 px-3">{e.date}</td>
                       <td className="text-center py-2 px-3">
                         <Button
                           size="sm"
@@ -228,10 +241,10 @@ const Expenses = () => {
                     <td colSpan={2} className="py-2 px-3">
                       Total
                     </td>
-                    <td className="text-right py-2 px-3">
-                      {CURRENCY} {totalExpenses.toLocaleString()}
+                    <td className="text-right py-2 px-3 font-bold text-success text-base">
+                      {CURRENCY} {totalToday.toLocaleString()}
                     </td>
-                    <td colSpan={2}></td>
+                    <td></td>
                   </tr>
                 </tfoot>
               </table>
@@ -239,6 +252,11 @@ const Expenses = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Button to view Monthly / Daily Expenses Details */}
+      <div className="flex justify-end">
+        <Button onClick={() => navigate("/daily-expenses-details")}>View Daily Expenses Details</Button>
+      </div>
     </div>
   );
 };

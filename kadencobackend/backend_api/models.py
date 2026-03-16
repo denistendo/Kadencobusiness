@@ -48,6 +48,7 @@ class Shipment(models.Model):
     transport_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     estimated_sales = models.DecimalField(max_digits=12, decimal_places=2)
     estimated_profit = models.DecimalField(max_digits=12, decimal_places=2)
+    supplier_name = models.CharField(max_length=255, default='System')
     date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in-transit')
 

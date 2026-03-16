@@ -88,11 +88,6 @@ def get_monthly_reports(request):
 
 @api_view(['GET'])
 def get_investors(request):
-    # Ensure the 3 fixed investors exist
-    fixed_names = ['Chris', 'Derrick', 'Mzee Boss']
-    for name in fixed_names:
-        Investor.objects.get_or_create(name=name)
-        
     investors = Investor.objects.all()
     serializer = InvestorSerializer(investors, many=True)
     return Response(serializer.data)
@@ -312,4 +307,5 @@ def edit_debtor_item(request, item_id):
     except DebtorItem.DoesNotExist:
         return Response({'error': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

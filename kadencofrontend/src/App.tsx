@@ -13,6 +13,7 @@ import Debts from "./pages/Debts";
 import MonthlyReports from "./pages/MonthlyReports";
 import NotFound from "./pages/NotFound";
 import DailySalesDetails from "./pages/DailySalesDetails";
+import DailyExpensesDetails from "./pages/DailyExpensesDetails";
 import Login from "./pages/Login";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
 import { Navigate } from "react-router-dom";
@@ -49,6 +50,7 @@ const App = () => (
                       <Route path="/debts" element={<Debts />} />
                       <Route path="/reports" element={<MonthlyReports />} />
                       <Route path="/daily-sales-details" element={<DailySalesDetails />} />
+                      <Route path="/daily-expenses-details" element={<DailyExpensesDetails />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Layout>
