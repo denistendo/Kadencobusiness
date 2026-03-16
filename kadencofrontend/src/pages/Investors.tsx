@@ -38,7 +38,7 @@ const Investors = () => {
     try {
       const data = await fetchApi("/investors/");
       const sourceArray = data.investors || data;
-      if (Array.isArray(sourceArray) && sourceArray.length > 0) {
+      if (Array.isArray(sourceArray)) {
         setShareholders(sourceArray.map((sh: any) => ({
           id: String(sh.id),
           name: sh.name,
@@ -46,12 +46,9 @@ const Investors = () => {
           withdrawals: Number(sh.withdrawals) || 0,
           currentBalance: Number(sh.current_balance || sh.currentBalance) || 0,
         })));
-      } else {
-        setShareholders(FALLBACK_INVESTORS);
       }
     } catch (err) {
       console.error("Error fetching investors:", err);
-      setShareholders(FALLBACK_INVESTORS);
     }
   };
 
@@ -61,6 +58,7 @@ const Investors = () => {
 
   const totalCapital = shareholders.reduce((s, sh) => s + sh.capitalContributed, 0);
   const totalBalance = shareholders.reduce((s, sh) => s + sh.currentBalance, 0);
+
 
   const handleTransaction = async () => {
     if (!selectedInvestor || !amount) {
@@ -76,26 +74,10 @@ const Investors = () => {
       });
       
       fetchInvestors();
-      toast.success("Transaction saved successfully to backend!");
+      toast.success("Transaction saved successfully!");
     } catch (err) {
       console.error(err);
-      
-      // OPTIMISTIC UPDATE FOR DEMO PURPOSES:
-      // Since backend is failing, we update local state so the user can see the UI working
-      setShareholders(prev => prev.map(sh => {
-        if (sh.id === selectedInvestor) {
-          const newCapital = txType === "contribution" ? sh.capitalContributed + amt : sh.capitalContributed;
-          const newWithdrawal = txType === "withdrawal" ? sh.withdrawals + amt : sh.withdrawals;
-          return {
-            ...sh,
-            capitalContributed: newCapital,
-            withdrawals: newWithdrawal,
-            currentBalance: newCapital - newWithdrawal
-          };
-        }
-        return sh;
-      }));
-      toast.success("Transaction simulated locally! (Backend error ignored for demo)");
+      toast.error("Failed to save transaction to backend");
     }
 
     setOpen(false);

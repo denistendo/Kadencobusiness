@@ -88,6 +88,11 @@ def get_monthly_reports(request):
 
 @api_view(['GET'])
 def get_investors(request):
+    # Ensure the 3 fixed investors exist
+    fixed_names = ['Chris', 'Derrick', 'Mzee Boss']
+    for name in fixed_names:
+        Investor.objects.get_or_create(name=name)
+        
     investors = Investor.objects.all()
     serializer = InvestorSerializer(investors, many=True)
     return Response(serializer.data)

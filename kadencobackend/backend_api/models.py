@@ -15,6 +15,7 @@ class Investor(models.Model):
 class InvestorTransaction(models.Model):
     TRANSACTION_TYPES = [
         ('injection', 'Injection'),
+        ('contribution', 'Contribution'),
         ('withdrawal', 'Withdrawal'),
     ]
     investor = models.ForeignKey(Investor, related_name='transactions', on_delete=models.CASCADE)
