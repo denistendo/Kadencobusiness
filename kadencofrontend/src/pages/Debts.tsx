@@ -151,6 +151,9 @@ const DebtorsPage = () => {
     d.name.toLowerCase().includes(searchQuery.toLowerCase()) || d.phone.includes(searchQuery)
   );
 
+  const totalOutstandingDebt = debtors.reduce((acc, d) => acc + calculateRemaining(d), 0);
+  const activeDebtorsCount = debtors.filter(d => calculateRemaining(d) > 0).length;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -214,6 +217,29 @@ const DebtorsPage = () => {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card className="bg-primary/5 hover:bg-primary/10 transition-colors border-primary/20">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-2">
+              <p className="text-sm font-medium text-primary">Total Outstanding Debt</p>
+            </div>
+            <div className="flex items-center space-x-2 mt-2">
+              <h2 className="text-3xl font-bold tracking-tight">UGX {totalOutstandingDebt.toLocaleString()}</h2>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-primary/5 hover:bg-primary/10 transition-colors border-primary/20">
+          <CardContent className="p-6">
+             <div className="flex items-center space-x-2">
+              <p className="text-sm font-medium text-primary">Active Clients with Debts</p>
+            </div>
+            <div className="flex items-center space-x-2 mt-2">
+              <h2 className="text-3xl font-bold tracking-tight">{activeDebtorsCount}</h2>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
