@@ -11,6 +11,7 @@ import DailySales from "./pages/DailySales";
 import DailyExpenses from "./pages/DailyExpenses";
 import Debts from "./pages/Debts";
 import MonthlyReports from "./pages/MonthlyReports";
+import BankTransactions from "./pages/BankTransactions";
 import NotFound from "./pages/NotFound";
 import DailySalesDetails from "./pages/DailySalesDetails";
 import DailyExpensesDetails from "./pages/DailyExpensesDetails";
@@ -48,6 +49,7 @@ const App = () => (
                       <Route path="/sales" element={<DailySales />} />
                       <Route path="/expenses" element={<DailyExpenses />} />
                       <Route path="/debts" element={<Debts />} />
+                      <Route path="/bank" element={<BankTransactions />} />
                       <Route path="/reports" element={<MonthlyReports />} />
                       <Route path="/daily-sales-details" element={<DailySalesDetails />} />
                       <Route path="/daily-expenses-details" element={<DailyExpensesDetails />} />
