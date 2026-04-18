@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from django.db.models import Sum
 from datetime import date
 from decimal import Decimal
-from .models import Investor, InvestorTransaction, Product, Shipment, DailySale, DailyExpense, Debtor, DebtorItem, DebtorPayment
-from .serializers import InvestorSerializer, ProductSerializer, ShipmentSerializer, DailySaleSerializer, DailyExpenseSerializer, DebtorSerializer
+from .models import Investor, InvestorTransaction, Product, Shipment, DailySale, DailyExpense, Debtor, DebtorItem, DebtorPayment, BankTransaction
+from .serializers import InvestorSerializer, ProductSerializer, ShipmentSerializer, DailySaleSerializer, DailyExpenseSerializer, DebtorSerializer, BankTransactionSerializer
 
 @api_view(['GET'])
 def dashboard_view(request):
@@ -391,5 +391,66 @@ def edit_debtor_item(request, item_id):
         return Response({'status': 'success', 'item_id': item.id})
     except DebtorItem.DoesNotExist:
         return Response({'error': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def get_bank_transactions(request):
+    transactions = BankTransaction.objects.all().order_by('-date', '-id')
+    
+    total_deposits = transactions.filter(type='deposit').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_withdrawals = transactions.filter(type='withdrawal').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_balance = total_deposits - total_withdrawals
+
+    return Response({
+        'transactions': BankTransactionSerializer(transactions, many=True).data,
+        'total_balance': total_balance,
+        'total_deposits': total_deposits,
+        'total_withdrawals': total_withdrawals
+    })
+
+@api_view(['POST'])
+def add_bank_transaction(request):
+    data = request.data
+    try:
+        transaction = BankTransaction.objects.create(
+            type=data['type'],
+            amount=data['amount'],
+            description=data.get('description', ''),
+            date=data.get('date', date.today())
+        )
+        return Response({'status': 'success', 'transaction_id': transaction.id})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def edit_bank_transaction(request, transaction_id):
+    data = request.data
+    try:
+        transaction = BankTransaction.objects.get(id=transaction_id)
+        if 'type' in data:
+            transaction.type = data['type']
+        if 'amount' in data:
+            transaction.amount = data['amount']
+        if 'description' in data:
+            transaction.description = data['description']
+        if 'date' in data:
+            transaction.date = data['date']
+        
+        transaction.save()
+        return Response({'status': 'success'})
+    except BankTransaction.DoesNotExist:
+        return Response({'error': 'Transaction not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def delete_bank_transaction(request, transaction_id):
+    try:
+        transaction = BankTransaction.objects.get(id=transaction_id)
+        transaction.delete()
+        return Response({'status': 'success'})
+    except BankTransaction.DoesNotExist:
+        return Response({'error': 'Transaction not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
