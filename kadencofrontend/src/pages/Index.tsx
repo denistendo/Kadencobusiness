@@ -20,6 +20,7 @@ interface DashboardData {
   today_expenses: Sale[];
   total_sales_today: number;
   total_expenses_today: number;
+  total_debt_payments?: number;
   cash_on_hand: number;
   monthly_data: { month: string; sales: number; expenses: number }[];
 }
@@ -53,7 +54,8 @@ const Index = () => {
           today_expenses: [],
           total_sales_today: Number(data.total_sales_today) || 0,
           total_expenses_today: Number(data.total_expenses_today) || 0,
-          cash_on_hand: (Number(data.total_sales) || 0) - (Number(data.total_expenses) || 0),
+          total_debt_payments: Number(data.total_debt_payments) || 0,
+          cash_on_hand: (Number(data.total_sales) || 0) + (Number(data.total_debt_payments) || 0) - (Number(data.total_expenses) || 0),
           monthly_data: data.monthly_data?.map((m: any) => ({
             month: m.month,
             sales: Number(m.sales) || 0,

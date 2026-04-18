@@ -18,6 +18,7 @@ def dashboard_view(request):
 
     total_sales = DailySale.objects.aggregate(Sum('total'))['total__sum'] or 0
     total_expenses = DailyExpense.objects.aggregate(Sum('amount'))['amount__sum'] or 0
+    total_debt_payments = DebtorPayment.objects.aggregate(Sum('amount'))['amount__sum'] or 0
 
     # Group sales and expenses by month
     from django.db.models.functions import TruncMonth
@@ -50,6 +51,7 @@ def dashboard_view(request):
         'total_expenses_today': total_expenses_today,
         'total_sales': total_sales,
         'total_expenses': total_expenses,
+        'total_debt_payments': total_debt_payments,
         'monthly_data': monthly_data_list
     })
 
