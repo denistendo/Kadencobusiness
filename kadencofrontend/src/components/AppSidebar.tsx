@@ -7,6 +7,7 @@ import {
   ShoppingCart,
   Receipt,
   Wallet,
+  Landmark,
   BarChart3,
 } from "lucide-react";
 import {
@@ -29,6 +30,7 @@ const navItems = [
   { title: "Daily Sales", url: "/sales", icon: ShoppingCart },
   { title: "Daily Expenses", url: "/expenses", icon: Receipt },
   { title: "Debts", url: "/debts", icon: Wallet },
+  { title: "Bank Account", url: "/bank", icon: Landmark },
   { title: "Monthly Reports", url: "/reports", icon: BarChart3 },
 ];
 
