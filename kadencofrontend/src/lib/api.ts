@@ -1,4 +1,6 @@
-export const API_BASE_URL = "https://kadencobusiness.onrender.com/api";
+export const API_BASE_URL = import.meta.env.DEV 
+  ? "http://localhost:8000/api" 
+  : "https://kadencobusiness.onrender.com/api";
 
 export const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
