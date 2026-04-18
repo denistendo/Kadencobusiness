@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Investor, InvestorTransaction, Product, Shipment, DailySale, DailyExpense, Debtor, DebtorItem, DebtorPayment
+from .models import Investor, InvestorTransaction, Product, Shipment, DailySale, DailyExpense, Debtor, DebtorItem, DebtorPayment, BankTransaction
 
 class InvestorTransactionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,3 +58,8 @@ class DebtorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Debtor
         fields = ['id', 'name', 'phone', 'items']
+
+class BankTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BankTransaction
+        fields = '__all__'

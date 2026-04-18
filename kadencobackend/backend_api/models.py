@@ -100,3 +100,16 @@ class DebtorPayment(models.Model):
 
     def __str__(self):
         return f"Payment: {self.amount} for item {self.item.id}"
+
+class BankTransaction(models.Model):
+    TRANSACTION_TYPES = [
+        ('deposit', 'Deposit'),
+        ('withdrawal', 'Withdrawal'),
+    ]
+    type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    description = models.CharField(max_length=255)
+    date = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.get_type_display()} - {self.amount} on {self.date}"

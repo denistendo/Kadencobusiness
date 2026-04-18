@@ -27,4 +27,9 @@ urlpatterns = [
     path('debtors/record-payment/', views.record_debtor_payment, name='record-debtor-payment'),
     path('debtors/item/<int:item_id>/delete/', views.delete_debtor_item, name='delete-debtor-item'),
     path('debtors/item/<int:item_id>/edit/', views.edit_debtor_item, name='edit-debtor-item'),
+
+    path('bank-transactions/', views.get_bank_transactions, name='bank-transactions-list'),
+    path('bank-transactions/add/', views.add_bank_transaction, name='add-bank-transaction'),
+    path('bank-transactions/<int:transaction_id>/edit/', views.edit_bank_transaction, name='edit-bank-transaction'),
+    path('bank-transactions/<int:transaction_id>/delete/', views.delete_bank_transaction, name='delete-bank-transaction'),
 ]
