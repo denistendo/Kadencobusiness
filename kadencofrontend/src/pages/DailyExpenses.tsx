@@ -223,19 +223,22 @@ const Expenses = () => {
         </CardContent>
       </Card>
 
-      {/* Expenses Table */}
+      {/* Recent Expenses Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Today's Expenses ({today})</CardTitle>
+          <CardTitle>Recent Expenses</CardTitle>
         </CardHeader>
         <CardContent>
-          {todayExpenses.length === 0 ? (
-            <p className="text-muted-foreground">No expenses recorded for today.</p>
+          {expenses.length === 0 ? (
+            <p className="text-muted-foreground">No expenses recorded yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">
+                      Date
+                    </th>
                     <th className="text-left py-2 px-3 font-medium text-muted-foreground">
                       Category
                     </th>
@@ -251,8 +254,9 @@ const Expenses = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {todayExpenses.map((e) => (
+                  {expenses.slice(0, 15).map((e) => (
                     <tr key={e.id} className="border-b">
+                      <td className="py-2 px-3 text-muted-foreground">{e.date}</td>
                       <td className="py-2 px-3">{e.category}</td>
                       <td className="py-2 px-3">{e.description || "-"}</td>
                       <td className="text-right py-2 px-3 font-semibold">
@@ -277,17 +281,6 @@ const Expenses = () => {
                     </tr>
                   ))}
                 </tbody>
-                <tfoot>
-                  <tr className="border-t font-bold text-success">
-                    <td colSpan={2} className="py-2 px-3">
-                      Total
-                    </td>
-                    <td className="text-right py-2 px-3 font-bold text-success text-base">
-                      {CURRENCY} {totalToday.toLocaleString("en-US", { maximumFractionDigits: 0 })}
-                    </td>
-                    <td></td>
-                  </tr>
-                </tfoot>
               </table>
             </div>
           )}

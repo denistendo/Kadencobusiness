@@ -200,19 +200,20 @@ const DailySales = () => {
         </CardContent>
       </Card>
 
-      {/* Today's Sales Table */}
+      {/* Recent Sales Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle>Today's Sales ({today})</CardTitle>
+          <CardTitle>Recent Sales</CardTitle>
         </CardHeader>
         <CardContent>
-          {todaySales.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No sales recorded for today.</p>
+          {sales.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No sales recorded yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
+                    <th className="text-left py-2 font-medium text-muted-foreground">Date</th>
                     <th className="text-left py-2 font-medium text-muted-foreground">Product</th>
                     <th className="text-right py-2 font-medium text-muted-foreground">Qty (kg)</th>
                     <th className="text-right py-2 font-medium text-muted-foreground">Price (UGX)</th>
@@ -221,8 +222,9 @@ const DailySales = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {todaySales.map(sale => (
+                  {sales.slice(0, 15).map(sale => (
                     <tr key={sale.id} className="border-b border-border/50">
+                      <td className="py-2.5 text-muted-foreground">{sale.date}</td>
                       <td className="py-2.5 font-medium">{sale.product}</td>
                       <td className="text-right py-2.5">{sale.quantity}</td>
                       <td className="text-right py-2.5">{sale.sellingPrice.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
@@ -238,13 +240,6 @@ const DailySales = () => {
                     </tr>
                   ))}
                 </tbody>
-                <tfoot>
-                  <tr>
-                    <td colSpan={3} className="py-3 font-bold">Total</td>
-                    <td className="text-right py-3 font-bold text-success text-base">{totalToday.toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
-                    <td></td>
-                  </tr>
-                </tfoot>
               </table>
             </div>
           )}
