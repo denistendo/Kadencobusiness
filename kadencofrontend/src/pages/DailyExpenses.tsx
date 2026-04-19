@@ -223,14 +223,14 @@ const Expenses = () => {
         </CardContent>
       </Card>
 
-      {/* Recent Expenses Table */}
+      {/* Today's Expenses Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Expenses</CardTitle>
+          <CardTitle>Today's Expenses</CardTitle>
         </CardHeader>
         <CardContent>
-          {expenses.length === 0 ? (
-            <p className="text-muted-foreground">No expenses recorded yet.</p>
+          {todayExpenses.length === 0 ? (
+            <p className="text-muted-foreground">No expenses recorded today.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -254,7 +254,7 @@ const Expenses = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {expenses.slice(0, 15).map((e) => (
+                  {todayExpenses.map((e) => (
                     <tr key={e.id} className="border-b">
                       <td className="py-2 px-3 text-muted-foreground">{e.date}</td>
                       <td className="py-2 px-3">{e.category}</td>
