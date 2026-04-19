@@ -172,7 +172,7 @@ def add_shipment(request):
 
 @api_view(['GET'])
 def get_sales(request):
-    sales = DailySale.objects.all().order_by('-date')[:500]
+    sales = DailySale.objects.select_related('product').all().order_by('-date')[:500]
     return Response(DailySaleSerializer(sales, many=True).data)
 
 @api_view(['POST'])
