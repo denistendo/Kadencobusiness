@@ -200,14 +200,14 @@ const DailySales = () => {
         </CardContent>
       </Card>
 
-      {/* Recent Sales Table */}
+      {/* Today's Sales Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle>Recent Sales</CardTitle>
+          <CardTitle>Today's Sales</CardTitle>
         </CardHeader>
         <CardContent>
-          {sales.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No sales recorded yet.</p>
+          {todaySales.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No sales recorded today.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -222,7 +222,7 @@ const DailySales = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {sales.slice(0, 15).map(sale => (
+                  {todaySales.map(sale => (
                     <tr key={sale.id} className="border-b border-border/50">
                       <td className="py-2.5 text-muted-foreground">{sale.date}</td>
                       <td className="py-2.5 font-medium">{sale.product}</td>
