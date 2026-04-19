@@ -172,7 +172,7 @@ def add_shipment(request):
 
 @api_view(['GET'])
 def get_sales(request):
-    sales = DailySale.objects.all().order_by('-date')
+    sales = DailySale.objects.all().order_by('-date')[:500]
     return Response(DailySaleSerializer(sales, many=True).data)
 
 @api_view(['POST'])
@@ -253,7 +253,7 @@ def delete_sale(request, sale_id):
 
 @api_view(['GET'])
 def get_expenses(request):
-    expenses = DailyExpense.objects.all().order_by('-date')
+    expenses = DailyExpense.objects.all().order_by('-date')[:500]
     return Response(DailyExpenseSerializer(expenses, many=True).data)
 
 @api_view(['POST'])
