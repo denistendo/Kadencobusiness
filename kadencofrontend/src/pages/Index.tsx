@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Receipt, Wallet, Plus, TrendingUp, ArrowRight, Truck } from "lucide-react";
+import { ShoppingCart, Receipt, Wallet, Plus, TrendingUp, ArrowRight, Truck, History } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { fetchApi } from "@/lib/api";
@@ -100,9 +100,9 @@ const Index = () => {
           action={
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full bg-primary/10 hover:bg-primary/20 text-primary">
-                  <span className="sr-only">View history</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                <Button variant="outline" size="sm" className="h-7 px-3 text-xs text-primary border-primary/20 hover:bg-primary/10 transition-colors gap-1">
+                  <History className="h-3 w-3" />
+                  History
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
