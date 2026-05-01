@@ -71,13 +71,21 @@ const DailySales = () => {
 
     try {
       if (editingId) {
-        // Edit existing sale (Optimistic update since our backend plan focused on 'add')
+        await fetchApi(`/sales/${editingId}/edit/`, {
+          method: "PUT",
+          body: JSON.stringify({
+            product_name: productName,
+            quantity: qty,
+            selling_price: price,
+            total: qty * price,
+          }),
+        });
         setSales(prev =>
           prev.map(s =>
             s.id === editingId ? { ...s, product: productName, quantity: qty, sellingPrice: price, total: qty * price } : s
           )
         );
-        toast.success("Sale updated");
+        toast.success("Sale updated successfully");
         setEditingId(null);
       } else {
         // Add new sale via API
@@ -111,9 +119,15 @@ const DailySales = () => {
   };
 
   // Delete sale
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this sale?")) {
-      setSales(prev => prev.filter(s => s.id !== id));
+      try {
+        await fetchApi(`/sales/${id}/delete/`, { method: "DELETE" });
+        setSales(prev => prev.filter(s => s.id !== id));
+        toast.success("Sale deleted");
+      } catch (err) {
+        toast.error("Failed to delete sale");
+      }
     }
   };
 

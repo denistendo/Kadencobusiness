@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Plus, Truck } from "lucide-react";
+import { Package, Plus, Truck, Edit, Trash2 } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -26,6 +26,7 @@ const Stock = () => {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [open, setOpen] = useState(false);
   const [recentSupplier, setRecentSupplier] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     product: "",
@@ -72,34 +73,38 @@ const Stock = () => {
     if (!productName) return;
 
     try {
-      // Add shipment via API
-      const response = await fetchApi("/shipments/add/", {
-        method: "POST",
-        body: JSON.stringify({
-          product_name: productName,
-          quantity: Number(form.quantity),
-          unit_price: Number(form.unitPrice),
-          transport_cost: Number(form.transportCost),
-          supplier_name: form.supplierName,
-          status: "received" // Added status as it is required by the backend
-        }),
-      });
-
-      const newShipment = {
-        id: String(response?.shipment_id || Date.now()),
-        product: productName,
-        quantity: Number(form.quantity),
-        unitPrice: Number(form.unitPrice),
-        transportCost: Number(form.transportCost),
-        supplierName: form.supplierName,
-        date: new Date().toLocaleDateString("en-GB"),
-      };
+      if (editingId) {
+        await fetchApi(`/shipments/${editingId}/edit/`, {
+          method: "PUT",
+          body: JSON.stringify({
+            product_name: productName,
+            quantity: Number(form.quantity),
+            unit_price: Number(form.unitPrice),
+            transport_cost: Number(form.transportCost),
+            supplier_name: form.supplierName,
+            status: "received"
+          }),
+        });
+        toast.success("Shipment updated successfully");
+        setEditingId(null);
+      } else {
+        await fetchApi("/shipments/add/", {
+          method: "POST",
+          body: JSON.stringify({
+            product_name: productName,
+            quantity: Number(form.quantity),
+            unit_price: Number(form.unitPrice),
+            transport_cost: Number(form.transportCost),
+            supplier_name: form.supplierName,
+            status: "received"
+          }),
+        });
+        toast.success("Shipment added successfully");
+      }
       
-      setShipments([newShipment, ...shipments]);
-      setRecentSupplier(form.supplierName);
-      toast.success("Shipment added successfully");
+      fetchShipments();
     } catch (err) {
-      toast.error("Failed to add shipment");
+      toast.error(editingId ? "Failed to update shipment" : "Failed to add shipment");
     }
 
     setForm({
@@ -113,6 +118,30 @@ const Stock = () => {
     setOpen(false);
   };
 
+  const handleEdit = (shipment: Shipment) => {
+    setForm({
+      product: PRODUCTS.includes(shipment.product) ? shipment.product : "Other",
+      customProduct: PRODUCTS.includes(shipment.product) ? "" : shipment.product,
+      quantity: String(shipment.quantity),
+      unitPrice: String(shipment.unitPrice),
+      transportCost: String(shipment.transportCost),
+      supplierName: shipment.supplierName,
+    });
+    setEditingId(shipment.id);
+    setOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this shipment?")) return;
+    try {
+      await fetchApi(`/shipments/${id}/delete/`, { method: "DELETE" });
+      toast.success("Shipment deleted successfully");
+      fetchShipments();
+    } catch (err) {
+      toast.error("Failed to delete shipment");
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* HEADER */}
@@ -124,14 +153,14 @@ const Stock = () => {
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => { setEditingId(null); setForm({product: "", customProduct: "", quantity: "", unitPrice: "", transportCost: "", supplierName: ""}); }}>
               <Plus className="h-4 w-4 mr-2" /> Add Shipment
             </Button>
           </DialogTrigger>
 
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Shipment</DialogTitle>
+              <DialogTitle>{editingId ? "Edit Shipment" : "Add Shipment"}</DialogTitle>
             </DialogHeader>
 
             <div className="space-y-3">
@@ -191,7 +220,7 @@ const Stock = () => {
               />
 
               <Button className="w-full" onClick={handleAddShipment}>
-                Save Shipment
+                {editingId ? "Update Shipment" : "Save Shipment"}
               </Button>
             </div>
           </DialogContent>
@@ -233,6 +262,7 @@ const Stock = () => {
                   <th className="text-right py-2 px-3 min-w-[130px]">Grand Total</th>
                   <th className="text-left py-2 px-4 min-w-[140px]">Supplier</th>
                   <th className="text-left py-2 px-4 min-w-[120px]">Date</th>
+                  <th className="text-center py-2 px-4">Actions</th>
                 </tr>
               </thead>
 
@@ -258,13 +288,21 @@ const Stock = () => {
                       </td>
                       <td className="py-3 px-4">{s.supplierName}</td>
                       <td className="py-3 px-4">{s.date}</td>
+                      <td className="py-3 px-4 flex justify-center gap-2">
+                        <Button size="sm" variant="outline" onClick={() => handleEdit(s)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleDelete(s.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </td>
                     </tr>
                   );
                 })}
 
                 {shipments.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="text-center py-6 text-muted-foreground">
+                    <td colSpan={9} className="text-center py-6 text-muted-foreground">
                       No shipments recorded yet
                     </td>
                   </tr>

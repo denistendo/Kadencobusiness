@@ -170,6 +170,70 @@ def add_shipment(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['PUT'])
+def edit_shipment(request, shipment_id):
+    data = request.data
+    try:
+        shipment = Shipment.objects.get(id=shipment_id)
+        
+        # Revert old stock impact
+        if shipment.status == 'received':
+            old_product = shipment.product
+            old_product.current_stock -= shipment.quantity
+            old_product.save()
+
+        # Update product if it changed
+        product, _ = Product.objects.get_or_create(
+            name=data.get('product_name', old_product.name),
+            defaults={'unit_price': data.get('unit_price', shipment.unit_price), 'low_stock_threshold': 10}
+        )
+        
+        qty = float(data.get('quantity', shipment.quantity))
+        u_price = float(data.get('unit_price', shipment.unit_price))
+        t_cost = float(data.get('transport_cost', shipment.transport_cost))
+        
+        est_sales = qty * (u_price * 1.2)
+        est_profit = est_sales - (qty * u_price) - t_cost
+        
+        shipment.product = product
+        shipment.quantity = qty
+        shipment.unit_price = u_price
+        shipment.transport_cost = t_cost
+        shipment.estimated_sales = est_sales
+        shipment.estimated_profit = est_profit
+        shipment.supplier_name = data.get('supplier_name', shipment.supplier_name)
+        status_val = data.get('status', shipment.status)
+        shipment.status = status_val
+        shipment.save()
+        
+        # Apply new stock impact
+        if status_val == 'received':
+            product.current_stock += qty
+            product.save()
+            
+        return Response({'status': 'success'})
+    except Shipment.DoesNotExist:
+        return Response({'error': 'Shipment not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def delete_shipment(request, shipment_id):
+    try:
+        shipment = Shipment.objects.get(id=shipment_id)
+        
+        if shipment.status == 'received':
+            product = shipment.product
+            product.current_stock -= shipment.quantity
+            product.save()
+            
+        shipment.delete()
+        return Response({'status': 'success'})
+    except Shipment.DoesNotExist:
+        return Response({'error': 'Shipment not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET'])
 def get_sales(request):
     sales = DailySale.objects.select_related('product').all().order_by('-date')[:500]
