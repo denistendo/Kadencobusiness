@@ -28,26 +28,27 @@ const DailySales = () => {
   const navigate = useNavigate();
   const today = new Date().toLocaleDateString("en-GB");
 
-  useEffect(() => {
-    // Attempt to fetch existing sales
-    const loadSales = async () => {
-      try {
-        const data = await fetchApi("/sales/");
-        if (Array.isArray(data)) {
-          const mappedSales = data.map((s: any) => ({
-            id: String(s.id),
-            product: s.product_name,
-            quantity: Number(s.quantity),
-            sellingPrice: Number(s.selling_price),
-            total: Number(s.total),
-            date: new Date(s.date).toLocaleDateString("en-GB"),
-          }));
-          setSales(mappedSales);
-        }
-      } catch (err) {
-        console.error("Error loading sales", err);
+  // Fetch existing sales
+  const loadSales = async () => {
+    try {
+      const data = await fetchApi("/sales/");
+      if (Array.isArray(data)) {
+        const mappedSales = data.map((s: any) => ({
+          id: String(s.id),
+          product: s.product_name,
+          quantity: Number(s.quantity),
+          sellingPrice: Number(s.selling_price),
+          total: Number(s.total),
+          date: new Date(s.date).toLocaleDateString("en-GB"),
+        }));
+        setSales(mappedSales);
       }
-    };
+    } catch (err) {
+      console.error("Error loading sales", err);
+    }
+  };
+
+  useEffect(() => {
     loadSales();
   }, []);
 
@@ -89,7 +90,7 @@ const DailySales = () => {
         setEditingId(null);
       } else {
         // Add new sale via API
-        const response = await fetchApi("/sales/add/", {
+        await fetchApi("/sales/add/", {
           method: "POST",
           body: JSON.stringify({
             product_name: productName,
@@ -98,21 +99,13 @@ const DailySales = () => {
             total: qty * price,
           }),
         });
-        
-        const newSale: DailySale = {
-          id: String(response?.id || Date.now()),
-          product: productName,
-          quantity: qty,
-          sellingPrice: price,
-          total: qty * price,
-          date: today,
-        };
-        setSales([newSale, ...sales]);
         toast.success("Sale recorded successfully");
       }
+      
+      loadSales();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to record sale to backend.");
+      toast.error(editingId ? "Failed to update sale." : "Failed to record sale.");
     }
 
     setForm({ product: "", customProduct: "", quantity: "", sellingPrice: "" });
@@ -123,8 +116,8 @@ const DailySales = () => {
     if (confirm("Are you sure you want to delete this sale?")) {
       try {
         await fetchApi(`/sales/${id}/delete/`, { method: "DELETE" });
-        setSales(prev => prev.filter(s => s.id !== id));
         toast.success("Sale deleted");
+        loadSales();
       } catch (err) {
         toast.error("Failed to delete sale");
       }
