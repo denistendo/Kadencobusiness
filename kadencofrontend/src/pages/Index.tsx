@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Receipt, Wallet, Plus, TrendingUp, ArrowRight, Truck } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { fetchApi } from "@/lib/api";
 
 interface Sale {
@@ -23,6 +24,7 @@ interface DashboardData {
   total_debt_payments?: number;
   cash_on_hand: number;
   monthly_data: { month: string; sales: number; expenses: number }[];
+  historical_cash: { month_year: string; cash: number; is_current: boolean }[];
 }
 
 const Index = () => {
@@ -33,6 +35,7 @@ const Index = () => {
     total_expenses_today: 0,
     cash_on_hand: 0,
     monthly_data: [],
+    historical_cash: [],
   });
 
   useEffect(() => {
@@ -49,18 +52,22 @@ const Index = () => {
             total: Number(s.total),
         }));
 
+        const historicalCash = data.historical_cash || [];
+        const currentMonthCash = historicalCash.find((h: any) => h.is_current);
+
         setDashboardData({
           today_sales: mappedTodaySales,
           today_expenses: [],
           total_sales_today: Number(data.total_sales_today) || 0,
           total_expenses_today: Number(data.total_expenses_today) || 0,
           total_debt_payments: Number(data.total_debt_payments) || 0,
-          cash_on_hand: (Number(data.total_sales) || 0) + (Number(data.total_debt_payments) || 0) - (Number(data.total_expenses) || 0),
+          cash_on_hand: currentMonthCash ? currentMonthCash.cash : 0,
           monthly_data: data.monthly_data?.map((m: any) => ({
             month: m.month,
             sales: Number(m.sales) || 0,
             expenses: Number(m.expenses) || 0,
           })) || [],
+          historical_cash: historicalCash,
         });
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
@@ -70,7 +77,7 @@ const Index = () => {
     loadDashboard();
   }, []);
 
-  const { today_sales, total_sales_today, total_expenses_today, cash_on_hand, monthly_data } = dashboardData;
+  const { today_sales, total_sales_today, total_expenses_today, cash_on_hand, monthly_data, historical_cash } = dashboardData;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -85,7 +92,52 @@ const Index = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard title="Today's Sales" value={`UGX ${total_sales_today.toLocaleString()}`} icon={ShoppingCart} variant="success" />
         <StatCard title="Today's Expenses" value={`UGX ${total_expenses_today.toLocaleString()}`} icon={Receipt} variant="warning" />
-        <StatCard title="Cash on Hand" value={`UGX ${cash_on_hand.toLocaleString()}`} icon={Wallet} variant="default" />
+        <StatCard 
+          title="Cash on Hand" 
+          value={`UGX ${cash_on_hand.toLocaleString()}`} 
+          icon={Wallet} 
+          variant="default" 
+          action={
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full bg-primary/10 hover:bg-primary/20 text-primary">
+                  <span className="sr-only">View history</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Historical Cash on Hand</DialogTitle>
+                </DialogHeader>
+                <div className="max-h-[300px] overflow-y-auto pr-2">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 font-medium text-muted-foreground">Month & Year</th>
+                        <th className="text-right py-2 font-medium text-muted-foreground">Cash on Hand</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historical_cash.map((h, i) => (
+                        <tr key={i} className={`border-b border-border/50 ${h.is_current ? 'bg-muted/50' : ''}`}>
+                          <td className="py-2.5 font-medium">{h.month_year} {h.is_current && <span className="text-xs text-muted-foreground ml-2">(Current)</span>}</td>
+                          <td className={`text-right py-2.5 font-semibold ${h.cash >= 0 ? 'text-success' : 'text-destructive'}`}>
+                            UGX {h.cash.toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                      {historical_cash.length === 0 && (
+                        <tr>
+                          <td colSpan={2} className="text-center py-6 text-muted-foreground">No historical data available.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </DialogContent>
+            </Dialog>
+          }
+        />
       </div>
 
       {/* QUICK ACTIONS */}

@@ -8,6 +8,7 @@ interface StatCardProps {
   trend?: string;
   trendUp?: boolean;
   variant?: "default" | "success" | "warning" | "info";
+  action?: React.ReactNode;
 }
 
 const variantStyles = {
@@ -24,13 +25,16 @@ const iconStyles = {
   info: "bg-info/10 text-info",
 };
 
-export function StatCard({ title, value, icon: Icon, trend, trendUp, variant = "default" }: StatCardProps) {
+export function StatCard({ title, value, icon: Icon, trend, trendUp, variant = "default", action }: StatCardProps) {
   return (
     <Card className={`animate-fade-in ${variantStyles[variant]}`}>
       <CardContent className="p-5">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-muted-foreground">{title}</p>
+              {action}
+            </div>
             <p className="text-2xl font-bold font-display tracking-tight">{value}</p>
             {trend && (
               <p className={`text-xs font-medium ${trendUp ? "text-success" : "text-destructive"}`}>
