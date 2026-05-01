@@ -44,7 +44,17 @@ const Expenses = () => {
   const totalToday = useMemo(() => todayExpenses.reduce((sum, e) => sum + Number(e.amount), 0), [todayExpenses]);
 
   // Month-to-date total
-  const monthlyTotal = useMemo(() => expenses.reduce((sum, e) => sum + Number(e.amount), 0), [expenses]);
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+
+  const monthlyTotal = useMemo(() => {
+    return expenses
+      .filter(e => {
+        const [d, m, y] = e.date.split("/").map(Number);
+        return m === currentMonth && y === currentYear;
+      })
+      .reduce((sum, e) => sum + Number(e.amount), 0);
+  }, [expenses, currentMonth, currentYear]);
 
   const loadExpenses = async () => {
     try {
