@@ -31,18 +31,44 @@ def dashboard_view(request):
     monthly_data_map = {m: {'month': m, 'sales': 0, 'expenses': 0} for m in months_order}
 
     for s in monthly_sales:
-        m_str = s['month'].strftime('%b')  # e.g 'Jan', 'Feb'
-        if m_str in monthly_data_map:
-            monthly_data_map[m_str]['sales'] = s['total_sales']
+        if s['month'] and s['month'].year == today.year:
+            m_str = s['month'].strftime('%b')  # e.g 'Jan', 'Feb'
+            if m_str in monthly_data_map:
+                monthly_data_map[m_str]['sales'] = s['total_sales']
 
     for e in monthly_expenses:
-        m_str = e['month'].strftime('%b')
-        if m_str in monthly_data_map:
-            monthly_data_map[m_str]['expenses'] = e['total_expenses']
+        if e['month'] and e['month'].year == today.year:
+            m_str = e['month'].strftime('%b')
+            if m_str in monthly_data_map:
+                monthly_data_map[m_str]['expenses'] = e['total_expenses']
 
     # Convert to list
     monthly_data_list = list(monthly_data_map.values())
+    
+    # Historical Cash on Hand
+    from collections import defaultdict
+    historical_coh = defaultdict(lambda: {'sales': Decimal(0), 'expenses': Decimal(0), 'debt': Decimal(0)})
+    
+    monthly_debt = DebtorPayment.objects.annotate(month=TruncMonth('date')).values('month').annotate(total_debt=Sum('amount')).order_by('month')
 
+    for s in monthly_sales:
+        if s['month']:
+            historical_coh[s['month']]['sales'] = s['total_sales']
+    for e in monthly_expenses:
+        if e['month']:
+            historical_coh[e['month']]['expenses'] = e['total_expenses']
+    for d in monthly_debt:
+        if d['month']:
+            historical_coh[d['month']]['debt'] = d['total_debt']
+
+    historical_cash = []
+    for m_date, data in sorted(historical_coh.items(), reverse=True):
+        coh = data['sales'] + data['debt'] - data['expenses']
+        historical_cash.append({
+            'month_year': m_date.strftime('%B %Y'),
+            'cash': coh,
+            'is_current': m_date.month == today.month and m_date.year == today.year
+        })
 
     return Response({
         'today_sales': DailySaleSerializer(today_sales, many=True).data,
@@ -52,7 +78,8 @@ def dashboard_view(request):
         'total_sales': total_sales,
         'total_expenses': total_expenses,
         'total_debt_payments': total_debt_payments,
-        'monthly_data': monthly_data_list
+        'monthly_data': monthly_data_list,
+        'historical_cash': historical_cash
     })
 
 @api_view(['GET'])
