@@ -8,7 +8,7 @@ import { Plus, Trash2, Edit2, Save, X } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { toast } from "sonner";
 
-type Payment = { amount: number; date: string };
+type Payment = { id: string; amount: number; date: string };
 type DebtorItem = { id: string; description: string; quantity: number; unit_price: number; labour?: number; total: number; date_taken: string; payments: Payment[] };
 const PRODUCTS = ["RED G.NUTS", "WHITE G.NUTS", "Other"];
 type Debtor = { id: string; name: string; phone: string; items: DebtorItem[] };
@@ -26,6 +26,9 @@ const DebtorsPage = () => {
   // Edit State
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ quantity: "", unitPrice: "", labour: "" });
+
+  const [editingPayment, setEditingPayment] = useState<string | null>(null);
+  const [editPaymentAmount, setEditPaymentAmount] = useState("");
 
   // --- Fetch debtors from API
   const fetchDebtors = async () => {
@@ -142,6 +145,48 @@ const DebtorsPage = () => {
       unitPrice: Number(item.unit_price).toString(),
       labour: item.labour ? Number(item.labour).toString() : "0"
     });
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    if (!window.confirm("Are you sure you want to delete this payment?")) return;
+    try {
+      const res = await fetchApi(`/debtors/payment/${paymentId}/delete/`, { method: "DELETE" });
+      if (res?.status === "success") {
+        toast.success("Payment deleted successfully");
+        fetchDebtors();
+        setOpenDetails(null);
+      }
+    } catch (err) {
+      toast.error("Error deleting payment");
+    }
+  };
+
+  const handleSaveEditPayment = async (paymentId: string) => {
+    const amt = parseFloat(editPaymentAmount);
+    if (isNaN(amt) || amt <= 0) {
+      toast.error("Valid positive number required for Payment Amount.");
+      return;
+    }
+
+    try {
+      const res = await fetchApi(`/debtors/payment/${paymentId}/edit/`, {
+        method: "PUT",
+        body: JSON.stringify({ amount: amt })
+      });
+      if (res?.status === "success") {
+        toast.success("Payment updated successfully");
+        setEditingPayment(null);
+        fetchDebtors();
+        setOpenDetails(null);
+      }
+    } catch (err) {
+      toast.error("Error updating payment");
+    }
+  };
+
+  const startEditingPayment = (payment: Payment) => {
+    setEditingPayment(payment.id);
+    setEditPaymentAmount(Number(payment.amount).toString());
   };
 
   const calculateRemaining = (debtor: Debtor) =>
@@ -330,9 +375,23 @@ const DebtorsPage = () => {
                         <p className="font-medium mb-1 text-xs text-muted-foreground uppercase tracking-wider">Payment History:</p>
                         <div className="space-y-1">
                           {item.payments.map((p, i) => (
-                            <div key={i} className="flex justify-between text-xs border-b last:border-0 pb-1 last:pb-0">
-                              <span>{p.date}</span>
-                              <span className="text-success font-medium">+UGX {Number(p.amount).toLocaleString()}</span>
+                            <div key={i} className="flex justify-between items-center text-xs border-b last:border-0 pb-1 last:pb-0">
+                              {editingPayment === p.id ? (
+                                <div className="flex w-full gap-2 mt-1 mb-1 items-center">
+                                  <Input type="number" value={editPaymentAmount} onChange={e => setEditPaymentAmount(e.target.value)} className="h-6 text-xs w-24" />
+                                  <Button size="sm" variant="ghost" className="h-6 px-2 py-0" onClick={() => handleSaveEditPayment(p.id)}><Save className="h-3 w-3"/></Button>
+                                  <Button size="sm" variant="ghost" className="h-6 px-2 py-0 text-destructive" onClick={() => setEditingPayment(null)}><X className="h-3 w-3"/></Button>
+                                </div>
+                              ) : (
+                                <>
+                                  <span className="flex-1">{p.date}</span>
+                                  <span className="text-success font-medium mr-4">+UGX {Number(p.amount).toLocaleString()}</span>
+                                  <div className="flex gap-1">
+                                    <button onClick={() => startEditingPayment(p)} className="text-muted-foreground hover:text-primary transition-colors"><Edit2 className="h-3 w-3" /></button>
+                                    <button onClick={() => handleDeletePayment(p.id)} className="text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-3 w-3" /></button>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           ))}
                         </div>

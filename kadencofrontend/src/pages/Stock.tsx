@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 const CURRENCY = "UGX";
 const PRODUCTS = ["RED G.NUTS", "WHITE G.NUTS", "Other"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 type Shipment = {
   id: string;
@@ -27,6 +28,7 @@ const Stock = () => {
   const [open, setOpen] = useState(false);
   const [recentSupplier, setRecentSupplier] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()]);
 
   const [form, setForm] = useState({
     product: "",
@@ -142,21 +144,47 @@ const Stock = () => {
     }
   };
 
+  const getMonthFromGBDate = (dateStr: string) => {
+    if (!dateStr) return -1;
+    const parts = dateStr.split("/");
+    if (parts.length !== 3) return -1;
+    return parseInt(parts[1], 10) - 1;
+  };
+
+  const selectedMonthIndex = MONTHS.indexOf(selectedMonth);
+
+  const filteredShipments = shipments.filter((s) => {
+    if (selectedMonth === "All") return true;
+    return getMonthFromGBDate(s.date) === selectedMonthIndex;
+  });
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* HEADER */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold">Shipments</h1>
           <p className="text-muted-foreground text-sm">Record incoming stock shipments</p>
         </div>
 
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setEditingId(null); setForm({product: "", customProduct: "", quantity: "", unitPrice: "", transportCost: "", supplierName: ""}); }}>
-              <Plus className="h-4 w-4 mr-2" /> Add Shipment
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2 items-center">
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Month" />
+            </SelectTrigger>
+            <SelectContent>
+              {["All", ...MONTHS].map((m) => (
+                <SelectItem key={m} value={m}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => { setEditingId(null); setForm({product: "", customProduct: "", quantity: "", unitPrice: "", transportCost: "", supplierName: ""}); }}>
+                <Plus className="h-4 w-4 mr-2" /> Add Shipment
+              </Button>
+            </DialogTrigger>
 
           <DialogContent>
             <DialogHeader>
@@ -225,13 +253,14 @@ const Stock = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StatCard
-          title="Total Shipments"
-          value={shipments.length.toString()}
+          title={`Shipments (${selectedMonth})`}
+          value={filteredShipments.length.toString()}
           icon={Truck}
           variant="success"
         />
@@ -267,7 +296,7 @@ const Stock = () => {
               </thead>
 
               <tbody>
-                {shipments.map((s) => {
+                {filteredShipments.map((s) => {
                   const productTotal = s.unitPrice * s.quantity;
                   const grandTotal = productTotal + s.transportCost;
                   return (
@@ -300,7 +329,7 @@ const Stock = () => {
                   );
                 })}
 
-                {shipments.length === 0 && (
+                {filteredShipments.length === 0 && (
                   <tr>
                     <td colSpan={9} className="text-center py-6 text-muted-foreground">
                       No shipments recorded yet

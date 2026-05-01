@@ -153,7 +153,7 @@ def add_investor_transaction(request):
 @api_view(['GET'])
 def get_stock(request):
     products = Product.objects.all()
-    shipments = Shipment.objects.all().order_by('-date')[:10]
+    shipments = Shipment.objects.all().order_by('-date')[:500]
     return Response({
         'products': ProductSerializer(products, many=True).data,
         'shipments': ShipmentSerializer(shipments, many=True).data
@@ -438,6 +438,31 @@ def record_debtor_payment(request):
             amount=data['amount']
         )
         return Response({'status': 'success', 'payment_id': payment.id})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def edit_debtor_payment(request, payment_id):
+    data = request.data
+    try:
+        payment = DebtorPayment.objects.get(id=payment_id)
+        if 'amount' in data:
+            payment.amount = data['amount']
+        payment.save()
+        return Response({'status': 'success'})
+    except DebtorPayment.DoesNotExist:
+        return Response({'error': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def delete_debtor_payment(request, payment_id):
+    try:
+        payment = DebtorPayment.objects.get(id=payment_id)
+        payment.delete()
+        return Response({'status': 'success'})
+    except DebtorPayment.DoesNotExist:
+        return Response({'error': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
