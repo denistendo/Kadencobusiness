@@ -57,7 +57,17 @@ const DailySales = () => {
   const totalToday = useMemo(() => todaySales.reduce((sum, s) => sum + s.total, 0), [todaySales]);
 
   // Month-to-date total
-  const monthlyTotal = useMemo(() => sales.reduce((sum, s) => sum + s.total, 0), [sales]);
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+
+  const monthlyTotal = useMemo(() => {
+    return sales
+      .filter(s => {
+        const [d, m, y] = s.date.split("/").map(Number);
+        return m === currentMonth && y === currentYear;
+      })
+      .reduce((sum, s) => sum + s.total, 0);
+  }, [sales, currentMonth, currentYear]);
 
   // Add / Edit sale
   const handleAddOrEdit = async () => {
