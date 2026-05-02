@@ -19,6 +19,13 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
+# ────────────────────────────────────────────────
+# TIMEZONE & LOCALIZATION
+# ────────────────────────────────────────────────
+
+TIME_ZONE = 'Africa/Kampala'
+USE_TZ = True
+USE_I18N = True
 
 # ────────────────────────────────────────────────
 # APPLICATIONS & MIDDLEWARE

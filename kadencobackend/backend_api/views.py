@@ -3,13 +3,14 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.db.models import Sum
 from datetime import date
+from django.utils import timezone
 from decimal import Decimal
 from .models import Investor, InvestorTransaction, Product, Shipment, DailySale, DailyExpense, Debtor, DebtorItem, DebtorPayment, BankTransaction
 from .serializers import InvestorSerializer, ProductSerializer, ShipmentSerializer, DailySaleSerializer, DailyExpenseSerializer, DebtorSerializer, BankTransactionSerializer
 
 @api_view(['GET'])
 def dashboard_view(request):
-    today = date.today()
+    today = timezone.localdate()
     today_sales = DailySale.objects.filter(date=today)
     today_expenses = DailyExpense.objects.filter(date=today)
 
@@ -136,7 +137,7 @@ def add_investor_transaction(request):
             type=trans_type,
             amount=amount,
             description=description,
-            date=date.today()
+            date=timezone.localdate()
         )
         
         # Update investor totals
@@ -185,7 +186,7 @@ def add_shipment(request):
             estimated_sales=est_sales,
             estimated_profit=est_profit,
             supplier_name=data.get('supplier_name', 'System'),
-            date=date.today(),
+            date=timezone.localdate(),
             status=data['status']
         )
         
@@ -281,7 +282,7 @@ def add_sale(request):
             quantity=qty,
             selling_price=data['selling_price'],
             total=data['total'],
-            date=date.today()
+            date=timezone.localdate()
         )
         
         product.current_stock -= qty
@@ -355,7 +356,7 @@ def add_expense(request):
             category=data['category'],
             description=data.get('description', ''),
             amount=data['amount'],
-            date=data.get('date', date.today())
+            date=data.get('date', timezone.localdate())
         )
         return Response({'status': 'success', 'expense_id': expense.id})
     except Exception as e:
@@ -533,7 +534,7 @@ def add_bank_transaction(request):
             type=data['type'],
             amount=data['amount'],
             description=data.get('description', ''),
-            date=data.get('date', date.today())
+            date=data.get('date', timezone.localdate())
         )
         return Response({'status': 'success', 'transaction_id': transaction.id})
     except Exception as e:
