@@ -102,15 +102,9 @@ const Index = () => {
       </div>
 
       {/* STAT CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard title="Today's Sales" value={`UGX ${total_sales_today.toLocaleString()}`} icon={ShoppingCart} variant="success" />
         <StatCard title="Today's Expenses" value={`UGX ${total_expenses_today.toLocaleString()}`} icon={Receipt} variant="warning" />
-        <StatCard 
-          title={`Debts Collected (${currentMonthName})`} 
-          value={`UGX ${currentMonthDebt.toLocaleString()}`} 
-          icon={Coins} 
-          variant="info" 
-        />
         <StatCard 
           title="Cash on Hand" 
           value={`UGX ${cash_on_hand.toLocaleString()}`} 
@@ -206,141 +200,61 @@ const Index = () => {
         </Card>
       </div>
 
-      {/* TWO COLUMN BOTTOM SECTION */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* TODAY SALES TABLE */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-display">Today's Sales</CardTitle>
-              <Link to="/sales">
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
-                  View all <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
+      {/* TODAY SALES TABLE */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-display">Today's Sales</CardTitle>
+            <Link to="/sales">
+              <Button variant="ghost" size="sm" className="text-muted-foreground">
+                View all <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
 
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 font-medium text-muted-foreground">Product</th>
-                    <th className="text-right py-2 font-medium text-muted-foreground">Qty (kg)</th>
-                    <th className="text-right py-2 font-medium text-muted-foreground">Price</th>
-                    <th className="text-right py-2 font-medium text-muted-foreground">Total</th>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 font-medium text-muted-foreground">Product</th>
+                  <th className="text-right py-2 font-medium text-muted-foreground">Qty (kg)</th>
+                  <th className="text-right py-2 font-medium text-muted-foreground">Price</th>
+                  <th className="text-right py-2 font-medium text-muted-foreground">Total</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {today_sales.map((sale) => (
+                  <tr key={sale.id} className="border-b border-border/50">
+                    <td className="py-2.5">{sale.product}</td>
+                    <td className="text-right py-2.5">{sale.quantity} kg</td>
+                    <td className="text-right py-2.5">UGX {sale.sellingPrice.toLocaleString()}</td>
+                    <td className="text-right py-2.5 font-medium">UGX {sale.total.toLocaleString()}</td>
                   </tr>
-                </thead>
-
-                <tbody>
-                  {today_sales.map((sale) => (
-                    <tr key={sale.id} className="border-b border-border/50">
-                      <td className="py-2.5">{sale.product}</td>
-                      <td className="text-right py-2.5">{sale.quantity} kg</td>
-                      <td className="text-right py-2.5">UGX {sale.sellingPrice.toLocaleString()}</td>
-                      <td className="text-right py-2.5 font-medium">UGX {sale.total.toLocaleString()}</td>
-                    </tr>
-                  ))}
-                  {today_sales.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="text-center py-6 text-muted-foreground">No sales recorded today.</td>
-                    </tr>
-                  )}
-                </tbody>
-
-                <tfoot>
+                ))}
+                {today_sales.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="py-2.5 font-semibold">
-                      Total
-                    </td>
-                    <td className="text-right py-2.5 font-bold text-success">
-                      UGX {total_sales_today.toLocaleString()}
-                    </td>
+                    <td colSpan={4} className="text-center py-6 text-muted-foreground">No sales recorded today.</td>
                   </tr>
-                </tfoot>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                )}
+              </tbody>
 
-        {/* MONTHLY DEBT RECOVERY SUMMARY */}
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-base font-display flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-primary" /> Monthly Debts Collected
-            </CardTitle>
-            <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">
-              By Calendar Month
-            </span>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 font-medium text-muted-foreground">Month & Year</th>
-                    <th className="text-right py-2 font-medium text-muted-foreground">Total Paid</th>
-                    <th className="text-right py-2 font-medium text-muted-foreground w-24">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monthly_debts.map((item, i) => (
-                    <tr key={i} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
-                      <td className="py-2.5 font-medium">{item.month_year}</td>
-                      <td className="text-right py-2.5 font-semibold text-success">
-                        UGX {item.total_recovered.toLocaleString()}
-                      </td>
-                      <td className="text-right py-2.5">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-7 px-2.5 text-xs border-primary/20 text-primary hover:bg-primary/5 transition-colors gap-1"
-                            >
-                              <Eye className="h-3 w-3" /> View
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                              <DialogTitle className="text-lg">Monthly Recovery Summary</DialogTitle>
-                            </DialogHeader>
-                            <div className="p-6 text-center space-y-4">
-                              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
-                                Month
-                              </span>
-                              <h3 className="text-2xl font-bold text-foreground">
-                                {item.month_year}
-                              </h3>
-                              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
-                                Total Debts Paid
-                              </span>
-                              <h2 className="text-3xl font-extrabold text-success">
-                                UGX {item.total_recovered.toLocaleString()}
-                              </h2>
-                              <p className="text-xs text-muted-foreground mt-2">
-                                This reflects the cumulative payments made by all debtors during this calendar month.
-                              </p>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </td>
-                    </tr>
-                  ))}
-                  {monthly_debts.length === 0 && (
-                    <tr>
-                      <td colSpan={3} className="text-center py-6 text-muted-foreground">
-                        No debtor payments recorded yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              <tfoot>
+                <tr>
+                  <td colSpan={3} className="py-2.5 font-semibold">
+                    Total
+                  </td>
+                  <td className="text-right py-2.5 font-bold text-success">
+                    UGX {total_sales_today.toLocaleString()}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
