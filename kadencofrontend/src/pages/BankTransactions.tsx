@@ -360,7 +360,7 @@ const BankTransactionsPage = () => {
               <p className="text-sm font-medium text-success">Deposits in Period</p>
             </div>
             <div className="mt-2.5">
-              <h2 className="text-2xl font-bold tracking-tight text-success">+{formatUGX(monthlyDeposits)}</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-success">{formatUGX(monthlyDeposits)}</h2>
               <p className="text-xs text-muted-foreground mt-0.5">Total additions</p>
             </div>
           </CardContent>
@@ -374,7 +374,7 @@ const BankTransactionsPage = () => {
               <p className="text-sm font-medium text-warning">Withdrawals in Period</p>
             </div>
             <div className="mt-2.5">
-              <h2 className="text-2xl font-bold tracking-tight text-warning">-{formatUGX(monthlyWithdrawals)}</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-warning">{formatUGX(monthlyWithdrawals)}</h2>
               <p className="text-xs text-muted-foreground mt-0.5">Total deductions</p>
             </div>
           </CardContent>
