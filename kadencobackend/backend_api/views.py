@@ -71,6 +71,14 @@ def dashboard_view(request):
             'is_current': m_date.month == today.month and m_date.year == today.year
         })
 
+    monthly_debts_list = []
+    for d in monthly_debt:
+        if d['month']:
+            monthly_debts_list.append({
+                'month_year': d['month'].strftime('%B %Y'),
+                'total_recovered': float(d['total_debt'])
+            })
+
     return Response({
         'today_sales': DailySaleSerializer(today_sales, many=True).data,
         'today_expenses': DailyExpenseSerializer(today_expenses, many=True).data,
@@ -80,7 +88,8 @@ def dashboard_view(request):
         'total_expenses': total_expenses,
         'total_debt_payments': total_debt_payments,
         'monthly_data': monthly_data_list,
-        'historical_cash': historical_cash
+        'historical_cash': historical_cash,
+        'monthly_debts': monthly_debts_list
     })
 
 @api_view(['GET'])
