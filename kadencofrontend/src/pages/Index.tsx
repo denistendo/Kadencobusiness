@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Receipt, Wallet, Plus, TrendingUp, ArrowRight, Truck, History, Eye } from "lucide-react";
+import { ShoppingCart, Receipt, Wallet, Plus, TrendingUp, ArrowRight, Truck, History, Eye, Coins } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { fetchApi } from "@/lib/api";
@@ -87,6 +87,11 @@ const Index = () => {
 
   const { today_sales, total_sales_today, total_expenses_today, cash_on_hand, monthly_data, historical_cash, monthly_debts } = dashboardData;
 
+  const currentMonthYearStr = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const currentMonthName = new Date().toLocaleDateString('en-US', { month: 'long' });
+  const currentMonthDebtObj = monthly_debts.find(d => d.month_year.toLowerCase() === currentMonthYearStr.toLowerCase());
+  const currentMonthDebt = currentMonthDebtObj ? currentMonthDebtObj.total_recovered : 0;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -97,9 +102,15 @@ const Index = () => {
       </div>
 
       {/* STAT CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Today's Sales" value={`UGX ${total_sales_today.toLocaleString()}`} icon={ShoppingCart} variant="success" />
         <StatCard title="Today's Expenses" value={`UGX ${total_expenses_today.toLocaleString()}`} icon={Receipt} variant="warning" />
+        <StatCard 
+          title={`Debts Collected (${currentMonthName})`} 
+          value={`UGX ${currentMonthDebt.toLocaleString()}`} 
+          icon={Coins} 
+          variant="info" 
+        />
         <StatCard 
           title="Cash on Hand" 
           value={`UGX ${cash_on_hand.toLocaleString()}`} 
